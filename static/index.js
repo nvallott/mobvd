@@ -30,7 +30,7 @@ Initializing map - leaflet with cartodb basemap and tooltip ready
 *****/
 APP.initMap = function(){
     // Initiaize the map - definig parameters and adding cartodb basemap
-    map = new L.map("map", {center: [46.51522, 6.62981], zoom: 10, minZoom: 7, maxZoom: 15, maxBounds: ([[46.128688, 5.971754],[47.121474, 7.313116]])});
+    map = new L.map("map", {center: [46.51522, 6.62981], zoom: 9.5, minZoom: 7, maxZoom: 15, maxBounds: ([[45.8, 5.7],[47.5, 7.9]])});
     let cartodb = L.tileLayer('https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png', {
         attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>, &copy;<a href="https://carto.com/attribution">CARTO</a>'
     });
@@ -41,42 +41,22 @@ APP.initMap = function(){
 
 APP.initSVG = function(){
     // get json
-    let svg = d3.select(map.getPanes().overlayPane).append("svg"),
-    g = svg.append("g").attr("class", "leaflet-zoom-hide");
+    let dataJson = [];
+    var dataOverlay = L.d3SvgOverlay(function(sel, proj) {
 
-    d3.json("iso5.json", function(collection) {
+  var upd = sel.selectAll('path').data(dataJson);
+  upd.enter()
+    .append('path')
+    .attr('d', proj.pathFromGeojson)
+    .attr('stroke', 'black')
+    .attr('fill', function(){ return d3.hsl(Math.random() * 360, 0.9, 0.5) })
+    .attr('fill-opacity', '0.5');
+  upd.attr('stroke-width', 1 / proj.scale);
+});
 
-      var transform = d3.geoTransform({point: projectPoint}),
-          path = d3.geoPath().projection(transform);
+// button to switch data
+L.control.layers({"Data": dataOverlay}).addTo(map);
 
-     d3_features = g.selectAll("path")
-        .data(collection.features)
-        .enter().append("path");
+d3.json("iso5.json", function(data) { dataJson = data.features; dataOverlay.addTo(map) });
 
-      map.on("viewreset", reset);
-
-      reset();
-
-    function reset() {
-          bounds = path.bounds(collection);
-
-          var topLeft = bounds[0],
-              bottomRight = bounds[1];
-
-          svg .attr("width", bottomRight[0] - topLeft[0])
-              .attr("height", bottomRight[1] - topLeft[1])
-              .style("left", topLeft[0] + "px")
-              .style("top", topLeft[1] + "px");
-
-          g .attr("transform", "translate(" + -topLeft[0] + "," + -topLeft[1] + ")");
-
-          d3_features.attr("d", path).attr('fill','blue');
-      }
-
-     // Use Leaflet to implement a D3 geometric transformation.
-      function projectPoint(x, y) {
-        var point = map.latLngToLayerPoint(new L.LatLng(y, x));
-        this.stream.point(point.x, point.y);
-      }
-  })
 };
