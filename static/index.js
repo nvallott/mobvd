@@ -15,12 +15,30 @@ let windowWidth = $(window).width();  // returns width of browser viewport
 let map;
 // Tooltip of the map
 let tooltipMap;
+//Color scale of the map
+let color = [];
+// Array to stock the infos from from the json
+let dataArray = [];
+// Array of all json datas
+let dataJson = [];
+// Array of all json datas
+let dataScale = [];
 
+let min;
+let max;
+
+
+
+//Color scale of the map
+let colorScaleRange = [];
+
+let colors = ["#f7fcf0","#e0f3db","#ccebc5","#a8ddb5","#7bccc4","#4eb3d3","#2b8cbe","#0868ac","#084081"];
 /*****
 Initializing the whole script of the page
 *****/
 APP.main = function(){
-    console.log("main");
+    APP.loadData();
+    setTimeout(500);
     APP.initMap();
     APP.initSVG();
 };
@@ -41,22 +59,55 @@ APP.initMap = function(){
 
 APP.initSVG = function(){
     // get json
-    let dataJson = [];
+
+    let dataTime = [];
     var dataOverlay = L.d3SvgOverlay(function(sel, proj) {
 
-  var upd = sel.selectAll('path').data(dataJson);
-  upd.enter()
-    .append('path')
-    .attr('d', proj.pathFromGeojson)
-    .attr('stroke', 'black')
-    .attr('fill', function(){ return d3.hsl(Math.random() * 360, 0.9, 0.5) })
-    .attr('fill-opacity', '0.5');
-  upd.attr('stroke-width', 1 / proj.scale);
-});
+      var upd = sel.selectAll('path').data(dataJson);
+          // console.log(dataJson);
+          // console.log(dataJson.properties);
+          console.log(dataScale);
+          var color = d3.scale.threshold()
+                        .domain([600, 900, 1200, 1800, 2400, 3000, 3600, 4200, 4800, 5400, 6000])
+                        .range(colors);
+          upd.enter()
+             .append('path')
+             .attr('d', proj.pathFromGeojson)
+             .attr('stroke', 'blue')
+             .attr('fill-opacity', '0.2')
+             .attr('fill', function(d){ return color(d.properties.time)})
+          upd.attr('stroke-width', 0.1 / proj.scale);
+      });
 
-// button to switch data
-L.control.layers({"Data": dataOverlay}).addTo(map);
+  // button to switch data
+  L.control.layers({"Data": dataOverlay}).addTo(map);
+    d3.json("iso5.json", function(data) {
+      console.log(data);
+      dataOverlay.addTo(map) });
+};
 
-d3.json("iso5.json", function(data) { dataJson = data.features; dataOverlay.addTo(map) });
+APP.loadData = function(){
+    d3.json("iso5.json", function(data) {
+      console.log(data);
+      APP.jsonToArray(data);
+    });
+}
 
+// Storing the data into an array
+APP.jsonToArray = function(data){
+  dataJson = data.features;
+  for (let i=0; i < data.features.length; i++){
+    dataScale.push(
+      data.features[i].properties.time
+    );
+  }
+  var min = d3.min(dataScale);
+  var max = d3.max(dataScale);
+  // console.log(dataScale);
+  for (i = 0; i < data.features.length; i++){
+    dataArray.push({
+      id : data.features[i].id,
+      time : data.features[i].properties.time
+    });
+  }
 };

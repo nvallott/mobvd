@@ -4,7 +4,6 @@
 }
 
 path {
-
   fill-opacity: .8;
   stroke: #fff;
   stroke-width: 1.5px;
@@ -44,19 +43,6 @@ td {
     text-align: center;
 }
 
-#tuto{
-    text-align: right;
-    font-style: italic;
-}
-
-#arret{
-    font-weight: bold;
-}
-
-#slideLabel{
-    font-weight: bold;
-}
-
 .bottom {
     fill: red;
     z-index: 5;
@@ -83,7 +69,3 @@ td {
     box-shadow: 0 0 15px rgba(0,0,0,0.2);
     border-radius: 5px;
 }
-/*.info h4 {
-margin: 0 0 5px;
-color: #777;
-}*/
