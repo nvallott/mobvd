@@ -24,21 +24,15 @@ let dataJson = [];
 // Array of all json datas
 let dataScale = [];
 
-let min;
-let max;
-
-
-
 //Color scale of the map
 let colorScaleRange = [];
 
-let colors = ["#f7fcf0","#e0f3db","#ccebc5","#a8ddb5","#7bccc4","#4eb3d3","#2b8cbe","#0868ac","#084081"];
+let colors = colorbrewer.Spectral[11];
 /*****
 Initializing the whole script of the page
 *****/
 APP.main = function(){
     APP.loadData();
-    setTimeout(500);
     APP.initMap();
     APP.initSVG();
 };
@@ -58,29 +52,25 @@ APP.initMap = function(){
     };
 
 APP.initSVG = function(){
-    // get json
 
-    let dataTime = [];
     var dataOverlay = L.d3SvgOverlay(function(sel, proj) {
 
       var upd = sel.selectAll('path').data(dataJson);
-          // console.log(dataJson);
-          // console.log(dataJson.properties);
           console.log(dataScale);
           var color = d3.scale.threshold()
-                        .domain([600, 900, 1200, 1800, 2400, 3000, 3600, 4200, 4800, 5400, 6000])
-                        .range(colors);
+                        .domain(dataScale.reverse())
+                        .range(colors;
           upd.enter()
              .append('path')
              .attr('d', proj.pathFromGeojson)
-             .attr('stroke', 'blue')
              .attr('fill-opacity', '0.2')
-             .attr('fill', function(d){ return color(d.properties.time)})
-          upd.attr('stroke-width', 0.1 / proj.scale);
+             .attr('fill', function(d){ return color(d.properties.time)});
+          upd.attr('stroke-width', 0.1 / proj.scale); // for updating the stroke when zooming
       });
 
   // button to switch data
   L.control.layers({"Data": dataOverlay}).addTo(map);
+
     d3.json("iso5.json", function(data) {
       console.log(data);
       dataOverlay.addTo(map) });

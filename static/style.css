@@ -4,21 +4,21 @@
 }
 
 path {
-  fill-opacity: .8;
+  fill-opacity: .2;
   stroke: #fff;
-  stroke-width: 1.5px;
+  stroke-width: 0.1px;
 }
 
-path:hover {
+/* path:hover {
   fill: brown;
   fill-opacity: .7;
-}
+} */
 
 body{
     padding-top: 65px;
 }
 
-div.tooltip {
+/* div.tooltip {
     position: absolute;
     background-color: #424242;
     color: white;
@@ -36,7 +36,7 @@ div.tooltipGraph {
     padding: 8px;
     margin-top: 90px;
     margin-left: 80px;
-}
+} */
 
 
 td {
@@ -48,24 +48,24 @@ td {
     z-index: 5;
 }
 
-.axis path,
+/* .axis path,
 .domain {
     fill: none;
     stroke: #000;
     shape-rendering: crispEdges;
     stroke-width: 1px;
-}
+} */
 
 .legend {
     line-height: 18px;
     color: #555;
 }
 
-.info {
+/* .info {
     padding: 4px 6px;
     font: 12px Arial, Helvetica, sans-serif;
     background: white;
     background: rgba(255,255,255,0.8);
     box-shadow: 0 0 15px rgba(0,0,0,0.2);
     border-radius: 5px;
-}
+} */
