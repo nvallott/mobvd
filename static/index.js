@@ -10,7 +10,6 @@ Declaring global variables
 let windowHeight = $(window).height();  // returns height of browser viewport
 let windowWidth = $(window).width();  // returns width of browser viewport
 
-
 // Map
 let map;
 // Tooltip of the map
@@ -38,7 +37,7 @@ APP.main = function(){
 };
 
 /*****
-Initializing map - leaflet with cartodb basemap and tooltip ready
+Initializing map - leaflet with cartodb basemap
 *****/
 APP.initMap = function(){
     // Initiaize the map - definig parameters and adding cartodb basemap
@@ -59,25 +58,45 @@ APP.initSVG = function(){
           console.log(dataScale);
           var color = d3.scale.threshold()
                         .domain(dataScale.reverse())
-                        .range(colors;
+                        .range(colors);
           upd.enter()
              .append('path')
              .attr('d', proj.pathFromGeojson)
              .attr('fill-opacity', '0.2')
-             .attr('fill', function(d){ return color(d.properties.time)});
+             .attr('fill', function(d){ return color(d.properties.time)})
+             .on("mouseover", mover)
+             .on("mouseout", mout);
           upd.attr('stroke-width', 0.1 / proj.scale); // for updating the stroke when zooming
       });
+
+    //Mouseover function NOT WORKING
+    function mover(d) {
+      var el = d3.select(this)
+    		.transition()
+    		.duration(10)
+    		.style("fill-opacity", 0.3);
+    }
+
+    //Mouseout function NOT WORKING
+    function mout(d) {
+    	var el = d3.select(this)
+    	   .transition()
+    	   .duration(1000)
+    	   .style("fill-opacity", 1);
+    };
 
   // button to switch data
   L.control.layers({"Data": dataOverlay}).addTo(map);
 
-    d3.json("iso5.json", function(data) {
+    // d3.json("iso5.json", function(data) {
+    d3.json("static/iso5.json", function(data) {
       console.log(data);
       dataOverlay.addTo(map) });
 };
 
 APP.loadData = function(){
-    d3.json("iso5.json", function(data) {
+    // d3.json("iso5.json", function(data) {
+    d3.json("static/iso5.json", function(data) {
       console.log(data);
       APP.jsonToArray(data);
     });
