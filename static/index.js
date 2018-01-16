@@ -25,14 +25,20 @@ let dataScale = [];
 //Color scale of the map
 let colorScaleRange = [];
 // get the color from colorbrewer lib
-let colors = colorbrewer.Spectral[11];
+let colors = colorbrewer.GnBu[4];
 // latitude and longitude from Lausanne station
-var lat = 46.516631
-var lng = 6.629156
-var mode = "TRANSIT,WALK"
-var mode = "CAR"
+let lat = 46.516631;
+let lng = 6.629156;
+// ischrones cut off in secondes
+let cf = "&cutoffSec="
+let cf1 = cf+600;
+let cf2 = cf+1200;
+let cf3 = cf+1800;
+// let mode = "TRANSIT,WALK";
+let mode = "CAR";
+let baseUrl = "http://localhost:8080/otp/routers/default/isochrone?&fromPlace="
 // get data url from the otp server
-let url = "http://localhost:8080/otp/routers/default/isochrone?&fromPlace=" + lat + "," + lng + "&date=2017/12/20&time=07:00:00&mode=" + mode + "&cutoffSec=1800";
+let url = baseUrl + lat + "," + lng + "&date=2017/12/20&time=07:00:00&mode=" + mode + cf1 + cf2 + cf3;
 
 /*****
 Initializing the whole script of the page
@@ -46,6 +52,7 @@ APP.main = function(){
 Initializing map - leaflet with cartodb basemap
 *****/
 APP.initMap = function(){
+
     // Initiaize the map - definig parameters and adding cartodb basemap
     map = new L.map("map", {center: [46.51522, 6.62981], zoom: 9.5, minZoom: 6, maxZoom: 15, maxBounds: ([[45.8, 5.7],[47.5, 7.9]])});
     let cartodb = L.tileLayer('https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png', {
@@ -54,13 +61,20 @@ APP.initMap = function(){
 
     // Add the cartodb layer to the map
     cartodb.addTo(map);
+    // change the baseLayer
+    let baseLayers = {
+      "CartoDB": cartodb
+      // here to add more layers
+    };
+    let overlays = {};
+    L.control.layers(baseLayers, overlays).addTo(map);
 
     // on click change the datas
     map.on('click', function(e){
       var coord = e.latlng;
       lat = coord.lat;
       lng = coord.lng;
-      url = "http://localhost:8080/otp/routers/default/isochrone?&fromPlace=" + lat + "," + lng + "&date=2017/12/20&time=07:00:00&mode=" + mode + "&cutoffSec=1800";
+      url = baseUrl + lat + "," + lng + "&date=2017/12/20&time=07:00:00&mode=" + mode + cf1 + cf2 + cf3;
       console.log(url);
       APP.removeSVG();
       APP.loadData(url);
@@ -72,13 +86,14 @@ APP.removeSVG = function(){
 };
 
 APP.initSVG = function(dataJson){
-    console.log(dataJson, "initSVG");
     var dataOverlay = L.d3SvgOverlay(function(sel, proj) {
       var upd = sel.selectAll('path').data(dataJson);
           console.log(dataScale);
+          console.log(colors);
       var color = d3.scale.threshold()
-                        .domain(dataScale.reverse())
-                        .range(colors);
+                          // .domain([600, 1200, 1800, 2400, 3000, 3600, 4200, 4800, 5400, 6000])
+                          .domain(dataScale.reverse())
+                          .range(colors);
           upd.enter()
              .append('path')
              .attr('d', proj.pathFromGeojson)
@@ -109,22 +124,21 @@ APP.initSVG = function(dataJson){
   // L.control.layers({"Data": dataOverlay}).addTo(map);
     d3.json(dataJson, function(data) {
     // d3.json("static/iso5.json", function(data) {
-      console.log(data);
       dataOverlay.addTo(map) });
 };
 
 APP.loadData = function(){
     d3.json(url, function(data) {
-      console.log(data, "load");
+      // console.log(data, "load");
     // d3.json("static/iso5.json", function(data) {
       APP.jsonToArray(data);
     });
 }
 
-
 // Storing the data into an array
 APP.jsonToArray = function(data){
   dataJson = data.features;
+  // empty array to push new datas
   dataScale = [];
   for (let i=0; i < data.features.length; i++){
     dataScale.push(
