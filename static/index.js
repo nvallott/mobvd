@@ -34,8 +34,7 @@ let cf = "&cutoffSec="
 let cf1 = cf+600;
 let cf2 = cf+1200;
 let cf3 = cf+1800;
-// let mode = "TRANSIT,WALK";
-let mode = "CAR";
+var mode = "TRANSIT,WALK";
 let baseUrl = "http://localhost:8080/otp/routers/default/isochrone?&fromPlace="
 // get data url from the otp server
 let url = baseUrl + lat + "," + lng + "&date=2017/12/20&time=07:00:00&mode=" + mode + cf1 + cf2 + cf3;
@@ -45,8 +44,13 @@ Initializing the whole script of the page
 *****/
 APP.main = function(){
     APP.loadData();
+    APP.changeUrl();
     APP.initMap();
+
 };
+
+APP.changeUrl= function(){
+}
 
 /*****
 Initializing map - leaflet with cartodb basemap
@@ -59,7 +63,8 @@ APP.initMap = function(){
         attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>, &copy;<a href="https://carto.com/attribution">CARTO</a>'
     });
 
-    // Add the cartodb layer to the map
+    // Add the cartodb layer to map
+    console.log(map);
     cartodb.addTo(map);
     // change the baseLayer
     let baseLayers = {
@@ -68,6 +73,8 @@ APP.initMap = function(){
     };
     let overlays = {};
     L.control.layers(baseLayers, overlays).addTo(map);
+    // add scale to map
+    L.control.scale({imperial: false}).addTo(map);
 
     // on click change the datas
     map.on('click', function(e){
@@ -79,6 +86,15 @@ APP.initMap = function(){
       APP.removeSVG();
       APP.loadData(url);
     });
+    $('.transport-mode select').on('change', function(){
+      mode = $('.transport-mode select').val();
+      console.log(mode);
+      url = baseUrl + lat + "," + lng + "&date=2017/12/20&time=07:00:00&mode=" + mode + cf1 + cf2 + cf3;
+      console.log(url);
+      APP.removeSVG();
+      APP.loadData(url);
+    });
+
 };
 
 APP.removeSVG = function(){
