@@ -29,8 +29,10 @@ let colors = colorbrewer.Spectral[11];
 // latitude and longitude from Lausanne station
 var lat = 46.516631
 var lng = 6.629156
+var mode = "TRANSIT,WALK"
+var mode = "CAR"
 // get data url from the otp server
-let url = "http://localhost:8080/otp/routers/default/isochrone?&fromPlace=" + lat + "," + lng + "&date=2017/12/20&time=07:00:00&mode=TRANSIT,WALK&cutoffSec=1800";
+let url = "http://localhost:8080/otp/routers/default/isochrone?&fromPlace=" + lat + "," + lng + "&date=2017/12/20&time=07:00:00&mode=" + mode + "&cutoffSec=1800";
 
 /*****
 Initializing the whole script of the page
@@ -58,7 +60,7 @@ APP.initMap = function(){
       var coord = e.latlng;
       lat = coord.lat;
       lng = coord.lng;
-      url = "http://localhost:8080/otp/routers/default/isochrone?&fromPlace=" + lat + "," + lng + "&date=2017/12/20&time=07:00:00&mode=CAR&cutoffSec=1800";
+      url = "http://localhost:8080/otp/routers/default/isochrone?&fromPlace=" + lat + "," + lng + "&date=2017/12/20&time=07:00:00&mode=" + mode + "&cutoffSec=1800";
       console.log(url);
       APP.removeSVG();
       APP.loadData(url);
@@ -66,8 +68,7 @@ APP.initMap = function(){
 };
 
 APP.removeSVG = function(){
-  d3.selectAll("path")
-    .remove();
+  d3.select("svg").remove();
 };
 
 APP.initSVG = function(dataJson){
@@ -83,8 +84,8 @@ APP.initSVG = function(dataJson){
              .attr('d', proj.pathFromGeojson)
              .attr('fill-opacity', '0.2')
              .attr('fill', function(d){ return color(d.properties.time)})
-             .on("mouseover", mover)
-             .on("mouseout", mout);
+             .on('mouseover', mover)
+             .on('mouseout', mout);
           upd.attr('stroke-width', 0.1 / proj.scale); // for updating the stroke when zooming
       });
 
@@ -124,7 +125,7 @@ APP.loadData = function(){
 // Storing the data into an array
 APP.jsonToArray = function(data){
   dataJson = data.features;
-  console.log(dataJson, "toArray");
+  dataScale = [];
   for (let i=0; i < data.features.length; i++){
     dataScale.push(
       data.features[i].properties.time
@@ -139,5 +140,5 @@ APP.jsonToArray = function(data){
       time : data.features[i].properties.time
     });
   }
-  APP.initSVG(dataJson);
+  APP.initSVG(dataJson, dataScale);
 };
