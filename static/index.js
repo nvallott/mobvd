@@ -30,15 +30,15 @@ let max;
 let lat = 46.516631;
 let lng = 6.629156;
 // ischrones cut off in secondes
+let isoVal = [600, 1200, 1800, 2400, 3000, 3600]
+let valCf;
 let cf = "&cutoffSec="
-let cf1 = cf+ "600";
-let cf2 = cf+"1200";
-let cf3 = cf+"3000";
+let cf1 = cf+ "1800";
 var mode = "TRANSIT,WALK";
 var time = "07:30";
 let baseUrl = "http://localhost:8080/otp/routers/default/isochrone?&fromPlace="
 // get data url from the otp server
-let url = baseUrl + lat + "," + lng + "&date=2017/12/20&time=" + time + "&mode=" + mode + cf1 + cf2 + cf3;
+let url = baseUrl + lat + "," + lng + "&date=2017/12/20&time=" + time + "&mode=" + mode + cf1;
 
 // Initializing the whole script of the page
 APP.main = function(){
@@ -74,21 +74,29 @@ APP.initMap = function(){
       var coord = e.latlng;
       lat = coord.lat;
       lng = coord.lng;
-      url = baseUrl + lat + "," + lng + "&date=2017/12/20&time=" + time + "&mode=" + mode + cf1 + cf2 + cf3;
+      url = baseUrl + lat + "," + lng + "&date=2017/12/20&time=" + time + "&mode=" + mode + cf1;
       console.log(url);
       APP.loadData(url);
     });
     $('.transport-mode select').on('change', function(){
       mode = $('.transport-mode select').val();
-      url = baseUrl + lat + "," + lng + "&date=2017/12/20&time=" + time + "&mode=" + mode + cf1 + cf2 + cf3;
+      url = baseUrl + lat + "," + lng + "&date=2017/12/20&time=" + time + "&mode=" + mode + cf1;
       console.log(url);
       APP.loadData(url);
     });
     $('.transport-time input').on('change', function(){
       time = $('.transport-time input').val();
-      url = baseUrl + lat + "," + lng + "&date=2017/12/20&time=" + time + "&mode=" + mode + cf1 + cf2 + cf3;
+      url = baseUrl + lat + "," + lng + "&date=2017/12/20&time=" + time + "&mode=" + mode + cf1;
       console.log(url);
       APP.loadData(url);
+    });
+    $('.sliderIso').change(function(){
+        valCf = $('#slider1').val();
+        $('#slider1_val').text(valCf/60 + " min");
+        cf1 = cf + valCf;
+        url = baseUrl + lat + "," + lng + "&date=2017/12/20&time=" + time + "&mode=" + mode + cf1;
+        console.log(cf1);
+        APP.loadData(url);
     });
 };
 // function to remove SVG
@@ -157,3 +165,12 @@ APP.jsonToArray = function(data){
   }
   APP.initSVG(dataJson);
 };
+
+// APP.exportJson = function(dataJson){
+//     let dataStr = JSON.stringify(dataJson);
+//     let exportFileDefaultName = 'data.json';
+//     let linkElement = document.createElement('a');
+//     linkElement.setAttribute('href', dataUri);
+//     linkElement.setAttribute('download', exportFileDefaultName);
+//     linkElement.click();
+// }

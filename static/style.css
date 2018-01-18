@@ -9,17 +9,12 @@ path {
   stroke-width: 0.1px;
 }
 
-/* path:hover {
-  fill: brown;
-  fill-opacity: .7;
-} */
-
 body{
     padding-top: 65px;
 }
 
 .transport-mode{
-    padding-top: 14px;
+    padding-top: 15px;
 }
 
 .transport-time{
@@ -27,54 +22,32 @@ body{
     padding-left: 13px;
 }
 
-/* div.tooltip {
-    position: absolute;
-    background-color: #424242;
-    color: white;
-    text-align: center;
-    padding: 8px;
-    margin-top: -50px;
+.transport-cutOff{
+    padding-top: 7px;
+    padding-left: 14px;
 }
 
-div.tooltipGraph {
-    font-size: 12px;
-    position: absolute;
-    background-color: #424242;
-    color: white;
-    text-align: center;
-    padding: 8px;
-    margin-top: 90px;
-    margin-left: 80px;
-} */
+#slider1_val{
+  color: #9d9d9d;
+  padding-top: 24px;
+  padding-left: 7px;
+}
 
+#sliderLabel{
+  color: #9d9d9d;
+  padding-top: 20px;
+}
 
 td {
     text-align: center;
 }
 
-.bottom {
+/* .bottom {
     fill: red;
     z-index: 5;
 }
 
-/* .axis path,
-.domain {
-    fill: none;
-    stroke: #000;
-    shape-rendering: crispEdges;
-    stroke-width: 1px;
-} */
-
 .legend {
     line-height: 18px;
     color: #555;
-}
-
-/* .info {
-    padding: 4px 6px;
-    font: 12px Arial, Helvetica, sans-serif;
-    background: white;
-    background: rgba(255,255,255,0.8);
-    box-shadow: 0 0 15px rgba(0,0,0,0.2);
-    border-radius: 5px;
 } */
