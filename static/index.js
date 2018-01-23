@@ -94,12 +94,18 @@ APP.initMap = function(){
       APP.loadData(url);
     });
     $('.sliderIso').change(function(){
-        valCf = $('#slider1').val();
-        $('#slider1_val').text(valCf/60 + " min");
-        cf1 = cf + valCf;
-        url = baseUrl + lat + "," + lng + "&date=2017/12/20&time=" + time + "&mode=" + mode + cf1;
-        console.log(cf1);
-        APP.loadData(url);
+      valCf = $('#slider1').val();
+      $('#slider1_val').text(valCf/60 + " min");
+      cf1 = cf + valCf;
+      url = baseUrl + lat + "," + lng + "&date=2017/12/20&time=" + time + "&mode=" + mode + cf1;
+      console.log(cf1);
+      APP.loadData(url);
+    });
+    $('#snap').on('click', function(){
+      $(".isochrone").addClass('snapIso')
+                     .removeClass('isochrone');
+      // d3.select(".snapIso").remove();
+      console.log("click");
     });
 };
 // function to remove SVG
@@ -133,8 +139,7 @@ APP.initIso = function(dataJson){
          .attr('fill-opacity', '0.2')
          .attr('fill', function(d){return color(d.properties.time)})
          .classed("isochrone", true);
-      upd.attr('stroke-width', 0.1 / proj.scale)// for updating the stroke when zooming
-         .classed("isochrone", true);
+      upd.attr('stroke-width', 0.1 / proj.scale);// for updating the stroke when zooming
   });
   // load the data to project
   d3.json(dataJson, function(data) {
@@ -154,7 +159,7 @@ APP.loadData = function(){
 }
 // function to load the datas
 APP.loadStops = function(){
-    d3.json("/stops", function(error, data) {
+    d3.json("stops", function(error, data) {
       if(error) {
         console.log(error);
       }
@@ -167,7 +172,7 @@ APP.loadStops = function(){
              .append('path')
              .attr('d', proj.pathFromGeojson)
              .attr('fill-opacity', '0.2')
-             .attr('fill', function(d){ return "red"})
+             .attr('fill', function(d){ return "turquoise"})
           upd.attr('stroke-width', 0.1 / proj.scale); // for updating the stroke when zooming
       });
       // load the data to project

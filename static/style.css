@@ -38,6 +38,12 @@ body{
   padding-top: 20px;
 }
 
+#snap{
+  position:relative;
+  left:14px;
+  top:14px
+}
+
 td {
     text-align: center;
 }
