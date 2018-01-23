@@ -7,6 +7,8 @@ let windowHeight = $(window).height();  // returns height of browser viewport
 let windowWidth = $(window).width();  // returns width of browser viewport
 // Map
 let map;
+
+let stops = [];
 // Tooltip of the map
 let tooltipMap;
 //Color scale of the map
@@ -43,6 +45,7 @@ let url = baseUrl + lat + "," + lng + "&date=2017/12/20&time=" + time + "&mode="
 // Initializing the whole script of the page
 APP.main = function(){
     APP.loadData();
+    APP.loadStops();
     APP.changeUrl();
     APP.initMap();
 
@@ -100,12 +103,11 @@ APP.initMap = function(){
     });
 };
 // function to remove SVG
-APP.removeSVG = function(){
-  d3.select("svg").remove();
+APP.removeIso = function(){
+  d3.select(".isochrone").remove();
 };
 // function to initialize SVG
-APP.initSVG = function(dataJson){
-  APP.removeSVG();
+APP.initIso = function(dataJson){
   // sorting time datas
   dataSort = dataScale.sort(function(a, b) {
     return a - b;
@@ -120,14 +122,19 @@ APP.initSVG = function(dataJson){
                       .range(colorsR);
   // function to project the json on the map
   var dataOverlay = L.d3SvgOverlay(function(sel, proj) {
-    var upd = sel.selectAll('path').data(dataJson);
+    APP.removeIso();
+    console.log(dataOverlay);
+    upd = sel.selectAll('path').data(dataJson);
+
       // update the projection of the SVG
       upd.enter()
          .append('path')
          .attr('d', proj.pathFromGeojson)
          .attr('fill-opacity', '0.2')
-         .attr('fill', function(d){ console.log(color(d.properties.time)); return color(d.properties.time)})
-      upd.attr('stroke-width', 0.1 / proj.scale); // for updating the stroke when zooming
+         .attr('fill', function(d){return color(d.properties.time)})
+         .classed("isochrone", true);
+      upd.attr('stroke-width', 0.1 / proj.scale)// for updating the stroke when zooming
+         .classed("isochrone", true);
   });
   // load the data to project
   d3.json(dataJson, function(data) {
@@ -145,11 +152,36 @@ APP.loadData = function(){
       APP.jsonToArray(data);
     });
 }
+// function to load the datas
+APP.loadStops = function(){
+    d3.json("/stops", function(error, data) {
+      if(error) {
+        console.log(error);
+      }
+      stops = data.features;
+      let stopsOverlay = L.d3SvgOverlay(function(sel, proj) {
+      let upd = sel.selectAll('path')
+                   .data(stops);
+          // update the projection of the SVG
+          upd.enter()
+             .append('path')
+             .attr('d', proj.pathFromGeojson)
+             .attr('fill-opacity', '0.2')
+             .attr('fill', function(d){ return "red"})
+          upd.attr('stroke-width', 0.1 / proj.scale); // for updating the stroke when zooming
+      });
+      // load the data to project
+      d3.json(stops, function(data) {
+        console.log(stops);
+      stopsOverlay.addTo(map)
+      });
+    });
+ };
 // function to store the data into arrays
 APP.jsonToArray = function(data){
   dataJson = data.features;
   colors = colorbrewer.BuPu[data.features.length+4]; // need n+1 of the domain
-  console.log(colors);
+  // console.log(colors);
   // empty array to push new datas
   dataScale = [];
   for (let i=0; i < data.features.length; i++){
@@ -163,14 +195,5 @@ APP.jsonToArray = function(data){
       time : data.features[i].properties.time
     });
   }
-  APP.initSVG(dataJson);
+  APP.initIso(dataJson);
 };
-
-// APP.exportJson = function(dataJson){
-//     let dataStr = JSON.stringify(dataJson);
-//     let exportFileDefaultName = 'data.json';
-//     let linkElement = document.createElement('a');
-//     linkElement.setAttribute('href', dataUri);
-//     linkElement.setAttribute('download', exportFileDefaultName);
-//     linkElement.click();
-// }
