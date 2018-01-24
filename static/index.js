@@ -8,6 +8,12 @@ let windowWidth = $(window).width();  // returns width of browser viewport
 // Map
 let map;
 
+let layers = {};
+
+let snapIso = [];
+
+let dataOverlay;
+
 let stops = [];
 // Tooltip of the map
 let tooltipMap;
@@ -28,12 +34,13 @@ let colors;
 let colorsR;
 let min;
 let max;
+let ct = 0;
 // latitude and longitude from Lausanne station
 let lat = 46.516631;
 let lng = 6.629156;
 // ischrones cut off in secondes
 let isoVal = [600, 1200, 1800, 2400, 3000, 3600]
-let valCf;
+let valCf = 1800;
 let cf = "&cutoffSec="
 let cf1 = cf+ "1800";
 var mode = "TRANSIT,WALK";
@@ -68,8 +75,9 @@ APP.initMap = function(){
       "CartoDB": cartodb
       // here to add more layers
     };
-    let overlays = {};
-    L.control.layers(baseLayers, overlays).addTo(map);
+
+    layers = L.control.layers(baseLayers)
+    layers.addTo(map);
     // add scale to map
     L.control.scale({imperial: false}).addTo(map);
     // on click change the datas
@@ -102,10 +110,15 @@ APP.initMap = function(){
       APP.loadData(url);
     });
     $('#snap').on('click', function(){
-      $(".isochrone").addClass('snapIso')
+      ct++;
+      console.log(ct);
+      $(".isochrone").addClass('snapIso'+ct)
                      .removeClass('isochrone');
-      // d3.select(".snapIso").remove();
-      console.log("click");
+      //add it to a control
+      // ATTENTION je crois que le controleur efface les elements en fonction de l'id donc aléatoire
+      snapIso[ct] = dataOverlay;
+      console.log(snapIso[ct]);
+      layers.addOverlay(snapIso[ct], "Iso"+ct);
     });
 };
 // function to remove SVG
@@ -124,12 +137,11 @@ APP.initIso = function(dataJson){
   // max = d3.max(dataSort);
   console.log(dataSort);
   var color = d3.scale.threshold()
-                      .domain(dataSort)
-                      .range(colorsR);
+                      .domain([0, 601, 1201, 1801, 2401, 3001, 3601])
+                      .range(colors);
   // function to project the json on the map
-  var dataOverlay = L.d3SvgOverlay(function(sel, proj) {
+  dataOverlay = L.d3SvgOverlay(function(sel, proj) {
     APP.removeIso();
-    console.log(dataOverlay);
     upd = sel.selectAll('path').data(dataJson);
 
       // update the projection of the SVG
@@ -137,13 +149,12 @@ APP.initIso = function(dataJson){
          .append('path')
          .attr('d', proj.pathFromGeojson)
          .attr('fill-opacity', '0.2')
-         .attr('fill', function(d){return color(d.properties.time)})
+         .attr('fill', function(d){  console.log(color(d.properties.time)); return color(d.properties.time);})
          .classed("isochrone", true);
       upd.attr('stroke-width', 0.1 / proj.scale);// for updating the stroke when zooming
   });
   // load the data to project
   d3.json(dataJson, function(data) {
-    // d3.json("static/iso5.json", function(data) {
     dataOverlay.addTo(map)
    });
 };
@@ -185,8 +196,9 @@ APP.loadStops = function(){
 // function to store the data into arrays
 APP.jsonToArray = function(data){
   dataJson = data.features;
-  colors = colorbrewer.BuPu[data.features.length+4]; // need n+1 of the domain
-  // console.log(colors);
+
+  colors = colorbrewer.Spectral[7]; // need n+1 of the domain
+  console.log(colors);
   // empty array to push new datas
   dataScale = [];
   for (let i=0; i < data.features.length; i++){
