@@ -8,8 +8,6 @@ let windowWidth = $(window).width();  // returns width of browser viewport
 // Map
 let map;
 
-let layers = {};
-
 let snapIso = [];
 
 let dataOverlay;
@@ -76,8 +74,8 @@ APP.initMap = function(){
       // here to add more layers
     };
 
-    layers = L.control.layers(baseLayers)
-    layers.addTo(map);
+    LC = L.control.layers(baseLayers)
+    LC.addTo(map);
     // add scale to map
     L.control.scale({imperial: false}).addTo(map);
     // on click change the datas
@@ -118,7 +116,7 @@ APP.initMap = function(){
       // ATTENTION je crois que le controleur efface les elements en fonction de l'id donc aléatoire
       snapIso[ct] = dataOverlay;
       console.log(snapIso[ct]);
-      layers.addOverlay(snapIso[ct], "Iso"+ct);
+      LC.addOverlay(snapIso[ct], "Iso"+ct);
     });
 };
 // function to remove SVG
@@ -135,7 +133,6 @@ APP.initIso = function(dataJson){
   var colorsR = colors.slice().reverse();
   // min = d3.min(dataSort);
   // max = d3.max(dataSort);
-  console.log(dataSort);
   var color = d3.scale.threshold()
                       .domain([0, 601, 1201, 1801, 2401, 3001, 3601])
                       .range(colors);
@@ -149,7 +146,7 @@ APP.initIso = function(dataJson){
          .append('path')
          .attr('d', proj.pathFromGeojson)
          .attr('fill-opacity', '0.2')
-         .attr('fill', function(d){  console.log(color(d.properties.time)); return color(d.properties.time);})
+         .attr('fill', function(d){return color(d.properties.time);})
          .classed("isochrone", true);
       upd.attr('stroke-width', 0.1 / proj.scale);// for updating the stroke when zooming
   });
@@ -186,6 +183,7 @@ APP.loadStops = function(){
              .attr('fill', function(d){ return "turquoise"})
           upd.attr('stroke-width', 0.1 / proj.scale); // for updating the stroke when zooming
       });
+      LC.addOverlay(stopsOverlay, "Arrêts de transport");
       // load the data to project
       d3.json(stops, function(data) {
         console.log(stops);
