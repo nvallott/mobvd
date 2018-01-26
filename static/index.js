@@ -135,7 +135,7 @@ APP.initIso = function(dataJson){
   // max = d3.max(dataSort);
   var color = d3.scale.threshold()
                       .domain([0, 601, 1201, 1801, 2401, 3001, 3601])
-                      .range(colors);
+                      .range(colorsR);
   // function to project the json on the map
   dataOverlay = L.d3SvgOverlay(function(sel, proj) {
     APP.removeIso();
@@ -167,7 +167,7 @@ APP.loadData = function(){
 }
 // function to load the datas
 APP.loadStops = function(){
-    d3.json("stops", function(error, data) {
+    d3.json("st", function(error, data) {
       if(error) {
         console.log(error);
       }
@@ -179,10 +179,13 @@ APP.loadStops = function(){
           upd.enter()
              .append('path')
              .attr('d', proj.pathFromGeojson)
+             .attr('r',12)
              .attr('fill-opacity', '0.2')
              .attr('fill', function(d){ return "turquoise"})
+
           upd.attr('stroke-width', 0.1 / proj.scale); // for updating the stroke when zooming
       });
+      // Add in the layer control
       LC.addOverlay(stopsOverlay, "Arrêts de transport");
       // load the data to project
       d3.json(stops, function(data) {
@@ -195,7 +198,7 @@ APP.loadStops = function(){
 APP.jsonToArray = function(data){
   dataJson = data.features;
 
-  colors = colorbrewer.Spectral[7]; // need n+1 of the domain
+  colors = colorbrewer.Blues[9]; // 7
   console.log(colors);
   // empty array to push new datas
   dataScale = [];
