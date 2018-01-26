@@ -68,9 +68,12 @@ APP.initMap = function(){
     });
     // Add the cartodb layer to map
     cartodb.addTo(map);
+    // Add the mapbox as baselayer
+    let mapbox = L.tileLayer('https://api.mapbox.com/styles/v1/nvallott/cjcw1ex6i0zs92smn584yavkn/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1IjoibnZhbGxvdHQiLCJhIjoiY2pjdzFkM2diMWFrMzJxcW80eTdnNDhnNCJ9.O853joFyvgOZv7y9IJAnlA');
     // change the baseLayer
     let baseLayers = {
-      "CartoDB": cartodb
+      "CartoDB": cartodb,
+      "MapBox": mapbox
       // here to add more layers
     };
 
