@@ -1,7 +1,6 @@
 html, body, #map {
   margin-top: 25px;
   width: 100%;
-  /* height: 100%; */
   height: calc(100% - 25px);
 }
 
@@ -38,6 +37,19 @@ body{
 #sliderLabel{
   color: #9d9d9d;
   padding-top: 20px;
+}
+
+.stops {
+    z-index: 1000;
+}
+
+div.tooltip {
+    position: absolute;
+    background-color: #424242;
+    color: white;
+    text-align: center;
+    padding: 8px;
+    margin-top: -50px;
 }
 
 #snap{

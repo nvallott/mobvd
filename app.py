@@ -22,7 +22,7 @@ def do_stops(epsg=4326):
     cur = conn.cursor() # get a query cursor
     # SQL query:
     sql = """SELECT stop_id AS stop_id, stop_name AS stop_name, ST_AsGeoJson(ST_Transform(geom, %i), 7) AS geom
-             FROM vd_stops""" % epsg
+             FROM vd_stops""" % epsg # FROM vd_s pour des stops 500*500
     cur.execute(sql)
     # retrieve the query result
     rows = cur.fetchall()
@@ -43,15 +43,15 @@ def do_stops(epsg=4326):
     }
     return feature_collection
 
-@app.route('/st')
-def st(epsg=4326):
-    return json.dumps(do_st(epsg))
+@app.route('/pix')
+def pix(epsg=4326):
+    return json.dumps(do_pix(epsg))
 
-def do_st(epsg=4326):
+def do_pix(epsg=4326):
     cur = conn.cursor() # get a query cursor
     # SQL query:
-    sql = """SELECT stop_id AS stop_id, stop_name AS stop_name, ST_AsGeoJson(ST_Transform(geom, %i), 7) AS geom
-             FROM vd_s""" % epsg
+    sql = """SELECT rastid AS rastid, ST_AsGeoJson(ST_Transform(geom, %i), 7) AS geom
+             FROM pixels_rast""" % epsg
     cur.execute(sql)
     # retrieve the query result
     rows = cur.fetchall()
@@ -61,10 +61,9 @@ def do_st(epsg=4326):
         features.append({
             "type": "Feature",
             "properties": {
-                "stop_id": row[0],
-                "stop_name": row[1]
+                "rastid": row[0]
             },
-            "geometry": json.loads(row[2])
+            "geometry": json.loads(row[1])
         })
     feature_collection = {
         "type": "FeatureCollection",

@@ -9,7 +9,6 @@ let windowWidth = $(window).width();  // returns width of browser viewport
 let map;
 
 let snapIso = [];
-
 let dataOverlay;
 
 let stops = [];
@@ -50,7 +49,6 @@ let url = baseUrl + lat + "," + lng + "&date=2017/12/20&time=" + time + "&mode="
 // Initializing the whole script of the page
 APP.main = function(){
     APP.loadData();
-    APP.loadStops();
     APP.changeUrl();
     APP.initMap();
 
@@ -90,18 +88,30 @@ APP.initMap = function(){
       console.log(url);
       APP.loadData(url);
     });
+
+    APP.loadPixels();
+    setTimeout(function(){
+        APP.loadStops();
+    }, 250);
+    // Getting tooltip ready for showing data
+    tooltipMap = d3.select('#map')
+    .append('div')
+    .attr('class', 'tooltip');
+    // changem mode of the isochrone
     $('.transport-mode select').on('change', function(){
       mode = $('.transport-mode select').val();
       url = baseUrl + lat + "," + lng + "&date=2017/12/20&time=" + time + "&mode=" + mode + cf1;
       console.log(url);
       APP.loadData(url);
     });
+    // change time of the isochrone
     $('.transport-time input').on('change', function(){
       time = $('.transport-time input').val();
       url = baseUrl + lat + "," + lng + "&date=2017/12/20&time=" + time + "&mode=" + mode + cf1;
       console.log(url);
       APP.loadData(url);
     });
+    // change cut off time of the isochrone
     $('.sliderIso').change(function(){
       valCf = $('#slider1').val();
       $('#slider1_val').text(valCf/60 + " min");
@@ -110,6 +120,7 @@ APP.initMap = function(){
       console.log(cf1);
       APP.loadData(url);
     });
+    // take a snap of the isochrone
     $('#snap').on('click', function(){
       ct++;
       console.log(ct);
@@ -150,6 +161,7 @@ APP.initIso = function(dataJson){
          .attr('d', proj.pathFromGeojson)
          .attr('fill-opacity', '0.2')
          .attr('fill', function(d){return color(d.properties.time);})
+         .style('position', 'relative')
          .classed("isochrone", true);
       upd.attr('stroke-width', 0.1 / proj.scale);// for updating the stroke when zooming
   });
@@ -170,7 +182,7 @@ APP.loadData = function(){
 }
 // function to load the datas
 APP.loadStops = function(){
-    d3.json("st", function(error, data) {
+    d3.json("stops", function(error, data) {
       if(error) {
         console.log(error);
       }
@@ -182,21 +194,72 @@ APP.loadStops = function(){
           upd.enter()
              .append('path')
              .attr('d', proj.pathFromGeojson)
-             .attr('r',12)
              .attr('fill-opacity', '0.2')
-             .attr('fill', function(d){ return "turquoise"})
-
+             .attr('fill', function(d){return "blue"})
+             .classed("stops", true)
+             .style('z-index', 1000);
           upd.attr('stroke-width', 0.1 / proj.scale); // for updating the stroke when zooming
       });
       // Add in the layer control
-      LC.addOverlay(stopsOverlay, "Arrêts de transport");
+      LC.addOverlay(stopsOverlay, "Arrêts de TP");
       // load the data to project
       d3.json(stops, function(data) {
         console.log(stops);
       stopsOverlay.addTo(map)
       });
     });
+      // Defining interaction events - has to wait for the data to be loaded
+      setTimeout(function(){
+        console.log("fdsf");
+          d3.selectAll('.stops')
+            .on('mouseover', function(d) { console.log("fdsf");
+              d3.select(this)
+              .transition()
+              .duration(200)
+              tooltipMap.html(function(){
+                console.log(d.properties.stop_name);
+                return `BALALAL ${d.properties.stop_name}`;
+              })
+              .style('opacity', 0.8)
+              .style('left', `${d3.event.pageX}px`)
+              .style('top', `${d3.event.pageY}px`);
+            })
+            .on('mouseout', function() {
+              d3.select(this)
+              .transition()
+              .duration(500)
+              .style("opacity", 0);
+            });
+      }, 1000);
  };
+ // function to load the datas
+ APP.loadPixels = function(){
+     d3.json("pix", function(error, data) {
+       if(error) {
+         console.log(error);
+       }
+       pixels = data.features;
+       let pixelsOverlay = L.d3SvgOverlay(function(sel, proj) {
+       let upd = sel.selectAll('path')
+                    .data(pixels);
+           // update the projection of the SVG
+           upd.enter()
+              .append('path')
+              .attr('d', proj.pathFromGeojson)
+              .attr('fill-opacity', '0.2')
+              .attr('fill', function(d){ return "red"})
+              .classed("pix", true);
+           upd.attr('stroke-width', 0.1 / proj.scale); // for updating the stroke when zooming
+       });
+       // Add in the layer control
+       LC.addOverlay(pixelsOverlay, "Pixels de populations");
+       // load the data to project
+       d3.json(pixels, function(data) {
+         console.log(pixels);
+       pixelsOverlay.addTo(map)
+       });
+     });
+  };
 // function to store the data into arrays
 APP.jsonToArray = function(data){
   dataJson = data.features;
