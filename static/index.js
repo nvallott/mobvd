@@ -49,13 +49,9 @@ let url = baseUrl + lat + "," + lng + "&date=2017/12/20&time=" + time + "&mode="
 // Initializing the whole script of the page
 APP.main = function(){
     APP.loadData();
-    APP.changeUrl();
     APP.initMap();
 
 };
-// Work in progress
-APP.changeUrl= function(){
-}
 
 // Initializing map - leaflet with cartodb basemap
 APP.initMap = function(){
@@ -68,10 +64,12 @@ APP.initMap = function(){
     cartodb.addTo(map);
     // Add the mapbox as baselayer
     let mapbox = L.tileLayer('https://api.mapbox.com/styles/v1/nvallott/cjcw1ex6i0zs92smn584yavkn/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1IjoibnZhbGxvdHQiLCJhIjoiY2pjdzFkM2diMWFrMzJxcW80eTdnNDhnNCJ9.O853joFyvgOZv7y9IJAnlA');
+    let toner = L.tileLayer('http://{s}.tile.stamen.com/toner/{z}/{x}/{y}.png', {attribution: 'Add some attributes here!'});
     // change the baseLayer
     let baseLayers = {
       "CartoDB": cartodb,
-      "MapBox": mapbox
+      "MapBox": mapbox,
+      "Stamen Toner": toner
       // here to add more layers
     };
 
@@ -85,14 +83,11 @@ APP.initMap = function(){
       lat = coord.lat;
       lng = coord.lng;
       url = baseUrl + lat + "," + lng + "&date=2017/12/20&time=" + time + "&mode=" + mode + cf1;
-      console.log(url);
       APP.loadData(url);
     });
 
     APP.loadPixels();
-    setTimeout(function(){
-        APP.loadStops();
-    }, 250);
+    APP.loadStops();
     // Getting tooltip ready for showing data
     tooltipMap = d3.select('#map')
     .append('div')
@@ -101,14 +96,12 @@ APP.initMap = function(){
     $('.transport-mode select').on('change', function(){
       mode = $('.transport-mode select').val();
       url = baseUrl + lat + "," + lng + "&date=2017/12/20&time=" + time + "&mode=" + mode + cf1;
-      console.log(url);
       APP.loadData(url);
     });
     // change time of the isochrone
     $('.transport-time input').on('change', function(){
       time = $('.transport-time input').val();
       url = baseUrl + lat + "," + lng + "&date=2017/12/20&time=" + time + "&mode=" + mode + cf1;
-      console.log(url);
       APP.loadData(url);
     });
     // change cut off time of the isochrone
@@ -117,13 +110,11 @@ APP.initMap = function(){
       $('#slider1_val').text(valCf/60 + " min");
       cf1 = cf + valCf;
       url = baseUrl + lat + "," + lng + "&date=2017/12/20&time=" + time + "&mode=" + mode + cf1;
-      console.log(cf1);
       APP.loadData(url);
     });
     // take a snap of the isochrone
     $('#snap').on('click', function(){
       ct++;
-      console.log(ct);
       $(".isochrone").addClass('snapIso'+ct)
                      .removeClass('isochrone');
       //add it to a control
@@ -161,7 +152,8 @@ APP.initIso = function(dataJson){
          .attr('d', proj.pathFromGeojson)
          .attr('fill-opacity', '0.2')
          .attr('fill', function(d){return color(d.properties.time);})
-         .style('position', 'relative')
+         .style('position','relative')
+         .attr('pointer-events','visible')
          .classed("isochrone", true);
       upd.attr('stroke-width', 0.1 / proj.scale);// for updating the stroke when zooming
   });
@@ -196,8 +188,8 @@ APP.loadStops = function(){
              .attr('d', proj.pathFromGeojson)
              .attr('fill-opacity', '0.2')
              .attr('fill', function(d){return "blue"})
+             .attr('z-index', 1000)
              .classed("stops", true)
-             .style('z-index', 1000);
           upd.attr('stroke-width', 0.1 / proj.scale); // for updating the stroke when zooming
       });
       // Add in the layer control
@@ -215,11 +207,13 @@ APP.loadStops = function(){
             .on('mouseover', function(d) { console.log("fdsf");
               d3.select(this)
               .transition()
-              .duration(200)
+              .duration(80)
               tooltipMap.html(function(){
                 console.log(d.properties.stop_name);
-                return `BALALAL ${d.properties.stop_name}`;
+                return `Arrêt: ${d.properties.stop_name}`;
               })
+              .transition()
+              .duration(100)
               .style('opacity', 0.8)
               .style('left', `${d3.event.pageX}px`)
               .style('top', `${d3.event.pageY}px`);
@@ -227,10 +221,12 @@ APP.loadStops = function(){
             .on('mouseout', function() {
               d3.select(this)
               .transition()
-              .duration(500)
+              .duration(150)
+              tooltipMap.transition()
+              .duration(150)
               .style("opacity", 0);
             });
-      }, 1000);
+      }, 500);
  };
  // function to load the datas
  APP.loadPixels = function(){
@@ -248,7 +244,8 @@ APP.loadStops = function(){
               .attr('d', proj.pathFromGeojson)
               .attr('fill-opacity', '0.2')
               .attr('fill', function(d){ return "red"})
-              .classed("pix", true);
+              .classed("pix", true)
+              .attr("pointer-events","visible");
            upd.attr('stroke-width', 0.1 / proj.scale); // for updating the stroke when zooming
        });
        // Add in the layer control
@@ -264,7 +261,7 @@ APP.loadStops = function(){
 APP.jsonToArray = function(data){
   dataJson = data.features;
 
-  colors = colorbrewer.Blues[9]; // 7
+  colors = colorbrewer.Spectral[10]; // 7
   console.log(colors);
   // empty array to push new datas
   dataScale = [];
