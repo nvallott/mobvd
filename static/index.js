@@ -47,14 +47,21 @@ let baseUrl = "http://localhost:8080/otp/routers/default/isochrone?&fromPlace="
 let url = baseUrl + lat + "," + lng + "&date=2017/12/20&time=" + time + "&mode=" + mode + cf1;
 
 // Initializing the whole script of the page
-APP.main = function(){
-    APP.loadData();
-    APP.initMap();
-
+APP.main = function(stops){
+  d3.queue()
+    .defer(APP.loadData)
+    .defer(APP.initMap)
+    .defer(APP.loadPixels)
+    .defer(APP.loadStops)
+    .await(function(error,stops) {
+      if (error) throw error;
+      console.log("AWAIT");
+      APP.stopsTooltip(stops);
+    });
 };
 
 // Initializing map - leaflet with cartodb basemap
-APP.initMap = function(){
+APP.initMap = function(cb){
     // Initiaize the map
     map = new L.map("map", {center: [46.51522, 6.62981], zoom: 9.5, minZoom: 6, maxZoom: 15, maxBounds: ([[45.8, 5.7],[47.5, 7.9]])});
     let cartodb = L.tileLayer('https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png', {
@@ -83,11 +90,8 @@ APP.initMap = function(){
       lat = coord.lat;
       lng = coord.lng;
       url = baseUrl + lat + "," + lng + "&date=2017/12/20&time=" + time + "&mode=" + mode + cf1;
-      APP.loadData(url);
+      APP.loadData(url, cb);
     });
-
-    APP.loadPixels();
-    APP.loadStops();
     // Getting tooltip ready for showing data
     tooltipMap = d3.select('#map')
     .append('div')
@@ -96,13 +100,13 @@ APP.initMap = function(){
     $('.transport-mode select').on('change', function(){
       mode = $('.transport-mode select').val();
       url = baseUrl + lat + "," + lng + "&date=2017/12/20&time=" + time + "&mode=" + mode + cf1;
-      APP.loadData(url);
+      APP.loadData(url, cb);
     });
     // change time of the isochrone
     $('.transport-time input').on('change', function(){
       time = $('.transport-time input').val();
       url = baseUrl + lat + "," + lng + "&date=2017/12/20&time=" + time + "&mode=" + mode + cf1;
-      APP.loadData(url);
+      APP.loadData(url, cb);
     });
     // change cut off time of the isochrone
     $('.sliderIso').change(function(){
@@ -110,7 +114,7 @@ APP.initMap = function(){
       $('#slider1_val').text(valCf/60 + " min");
       cf1 = cf + valCf;
       url = baseUrl + lat + "," + lng + "&date=2017/12/20&time=" + time + "&mode=" + mode + cf1;
-      APP.loadData(url);
+      APP.loadData(url, cb);
     });
     // take a snap of the isochrone
     $('#snap').on('click', function(){
@@ -123,6 +127,7 @@ APP.initMap = function(){
       console.log(snapIso[ct]);
       LC.addOverlay(snapIso[ct], "Iso"+ct);
     });
+    cb(null);
 };
 // function to remove SVG
 APP.removeIso = function(){
@@ -163,17 +168,19 @@ APP.initIso = function(dataJson){
    });
 };
 // function to load the datas
-APP.loadData = function(){
+APP.loadData = function(cb){
     d3.json(url, function(error, data) {
       if(error) {
         console.log(error);
       }
     // d3.json("static/iso5.json", function(data) {
       APP.jsonToArray(data);
+      APP.stopsTooltip(stops);
+      cb(null);
     });
 }
 // function to load the datas
-APP.loadStops = function(){
+APP.loadStops = function(cb){
     d3.json("stops", function(error, data) {
       if(error) {
         console.log(error);
@@ -200,36 +207,11 @@ APP.loadStops = function(){
       stopsOverlay.addTo(map)
       });
     });
-      // Defining interaction events - has to wait for the data to be loaded
-      setTimeout(function(){
-        console.log("fdsf");
-          d3.selectAll('.stops')
-            .on('mouseover', function(d) { console.log("fdsf");
-              d3.select(this)
-              .transition()
-              .duration(80)
-              tooltipMap.html(function(){
-                console.log(d.properties.stop_name);
-                return `Arrêt: ${d.properties.stop_name}`;
-              })
-              .transition()
-              .duration(100)
-              .style('opacity', 0.8)
-              .style('left', `${d3.event.pageX}px`)
-              .style('top', `${d3.event.pageY}px`);
-            })
-            .on('mouseout', function() {
-              d3.select(this)
-              .transition()
-              .duration(150)
-              tooltipMap.transition()
-              .duration(150)
-              .style("opacity", 0);
-            });
-      }, 500);
+    APP.stopsTooltip(stops);
+    cb(null);
  };
  // function to load the datas
- APP.loadPixels = function(){
+ APP.loadPixels = function(cb){
      d3.json("pix", function(error, data) {
        if(error) {
          console.log(error);
@@ -256,6 +238,7 @@ APP.loadStops = function(){
        pixelsOverlay.addTo(map)
        });
      });
+     cb(null);
   };
 // function to store the data into arrays
 APP.jsonToArray = function(data){
@@ -277,4 +260,33 @@ APP.jsonToArray = function(data){
     });
   }
   APP.initIso(dataJson);
+};
+
+// Defining tooltip events
+APP.stopsTooltip = function(stops){
+  setTimeout(function(){
+      d3.selectAll('.stops')
+        .on('mouseover', function(stops) { console.log("dasf");
+          d3.select(this)
+          .transition()
+          .duration(50)
+          tooltipMap.html(function(){
+            console.log(stops.properties.stop_name);
+            return `Arrêt: ${stops.properties.stop_name}`;
+          })
+          .transition()
+          .duration(100)
+          .style('opacity', 0.8)
+          .style('left', `${d3.event.pageX}px`)
+          .style('top', `${d3.event.pageY}px`);
+        })
+        .on('mouseout', function() {
+          d3.select(this)
+          .transition()
+          .duration(150)
+          tooltipMap.transition()
+          .duration(150)
+          .style("opacity", 0);
+        });
+  }, 500);
 };

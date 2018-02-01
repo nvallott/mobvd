@@ -8,7 +8,7 @@ app.debug = True
 
 # Connect to PostGIS database
 conn = db.connect("dbname='mobvd' user='nvallott' host='localhost' password=''")
-
+conn2 = db.connect("dbname='mob_dev' user='nvallott' host='localhost' password=''")
 # Creates route to polygon layer
 # @app.route('/geom')
 # def geom(epsg=4326):
