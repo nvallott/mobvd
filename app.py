@@ -14,6 +14,29 @@ conn2 = db.connect("dbname='mob_dev' user='nvallott' host='localhost' password='
 # def geom(epsg=4326):
 #     return flask.jsonify({ "pixel": do_pixel(epsg), "stop": do_stop(epsg) })
 
+# Creating route for each indicator according to domain/theme value
+@app.route('/s<string:s><int:i>')
+def sb_tim(s, i):
+    cur = conn2.cursor()     # get a query cursor
+    # our SQL query:
+    sql = """SELECT id AS id, orig AS orig, dest AS dest, time AS time
+             FROM s%s%i""" % (s,i)
+
+    cur.execute(sql)
+    rows = cur.fetchall()
+
+    features = []
+    for row in rows:
+        features.append({
+                "id": row[0],
+                "orig": row[1],
+                "dest": row[2],
+                "time": row[3]
+        })
+
+    return json.dumps(features)
+
+
 @app.route('/stops')
 def stops(epsg=4326):
     return json.dumps(do_stops(epsg))
