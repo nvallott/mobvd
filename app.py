@@ -22,20 +22,22 @@ def sb_tim(s, i):
     sql = """SELECT id AS id, orig AS orig, dest AS dest, time AS time
              FROM s%s%i""" % (s,i)
 
-    cur.execute(sql)
-    rows = cur.fetchall()
+    try:
+        cur.execute(sql)
+        rows = cur.fetchall()
 
-    features = []
-    for row in rows:
-        features.append({
-                "id": row[0],
-                "orig": row[1],
-                "dest": row[2],
-                "time": row[3]
-        })
+        features = []
+        for row in rows:
+            features.append({
+                    "id": row[0],
+                    "orig": row[1],
+                    "dest": row[2],
+                    "time": row[3]
+            })
 
-    return json.dumps(features)
-
+        return json.dumps(features)
+    except db.Error:
+        conn2.rollback()
 
 @app.route('/stops')
 def stops(epsg=4326):
