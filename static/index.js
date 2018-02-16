@@ -18,16 +18,25 @@ let tooltipMap;
 let color = [];
 // Array to stock the infos from from the json
 let dataArray = [];
+// Array to stock the infos from from the json
+let dataArrayS = [];
 // Array of all json datas
 let dataJson = [];
+// Array of all json datas
+let dataS = [];
 // Array of all time datas
 let dataScale = [];
 // Array of all json datas
 let dataSort = [];
+// Array of all time datas
+let dataScaleS = [];
+// Array of all json datas
+let dataSortS = [];
 //Color scale of the map
 let colorScaleRange = [];
+
+let colors = colorbrewer.Spectral[10]; // 7
 // get the color from colorbrewer lib
-let colors;
 let colorsR;
 let min;
 let max;
@@ -44,15 +53,17 @@ var mode = "TRANSIT,WALK";
 var time = "07:30";
 let baseUrl = "http://localhost:8080/otp/routers/default/isochrone?&fromPlace="
 // get data url from the otp server
-let url = baseUrl + lat + "," + lng + "&date=2017/12/20&time=" + time + "&mode=" + mode + cf1;
-
+let urlOtp = baseUrl + lat + "," + lng + "&date=2017/12/20&time=" + time + "&mode=" + mode + cf1;
+// get data url from the otp server
+let urlPsql = "sa_tp2069"
 // Initializing the whole script of the page
 APP.main = function(stops){
+  APP.initMap();
   d3.queue()
-    .defer(APP.loadData)
-    .defer(APP.initMap)
-    .defer(APP.loadPixels)
-    .defer(APP.loadStops)
+    .defer(APP.loadDataOtp)
+    .defer(APP.loadDataPsql)
+    // .defer(APP.loadPixels)
+    // .defer(APP.loadStops)
     .await(function(error,stops) {
       if (error) throw error;
       console.log("AWAIT");
@@ -61,7 +72,7 @@ APP.main = function(stops){
 };
 
 // Initializing map - leaflet with cartodb basemap
-APP.initMap = function(cb){
+APP.initMap = function(){
     // Initiaize the map
     map = new L.map("map", {center: [46.51522, 6.62981], zoom: 9.5, minZoom: 6, maxZoom: 15, maxBounds: ([[45.8, 5.7],[47.5, 7.9]])});
     let cartodb = L.tileLayer('https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png', {
@@ -89,8 +100,8 @@ APP.initMap = function(cb){
       var coord = e.latlng;
       lat = coord.lat;
       lng = coord.lng;
-      url = baseUrl + lat + "," + lng + "&date=2017/12/20&time=" + time + "&mode=" + mode + cf1;
-      APP.loadData(url, cb);
+      urlOtp = baseUrl + lat + "," + lng + "&date=2017/12/20&time=" + time + "&mode=" + mode + cf1;
+      APP.loadDataOtp(urlOtp);
     });
     // Getting tooltip ready for showing data
     tooltipMap = d3.select('#map')
@@ -99,22 +110,22 @@ APP.initMap = function(cb){
     // changem mode of the isochrone
     $('.transport-mode select').on('change', function(){
       mode = $('.transport-mode select').val();
-      url = baseUrl + lat + "," + lng + "&date=2017/12/20&time=" + time + "&mode=" + mode + cf1;
-      APP.loadData(url, cb);
+      urlOtp = baseUrl + lat + "," + lng + "&date=2017/12/20&time=" + time + "&mode=" + mode + cf1;
+      APP.loadDataOtp(urlOtp);
     });
     // change time of the isochrone
     $('.transport-time input').on('change', function(){
       time = $('.transport-time input').val();
-      url = baseUrl + lat + "," + lng + "&date=2017/12/20&time=" + time + "&mode=" + mode + cf1;
-      APP.loadData(url, cb);
+      urlOtp = baseUrl + lat + "," + lng + "&date=2017/12/20&time=" + time + "&mode=" + mode + cf1;
+      APP.loadDataOtp(urlOtp);
     });
     // change cut off time of the isochrone
     $('.sliderIso').change(function(){
       valCf = $('#slider1').val();
       $('#slider1_val').text(valCf/60 + " min");
       cf1 = cf + valCf;
-      url = baseUrl + lat + "," + lng + "&date=2017/12/20&time=" + time + "&mode=" + mode + cf1;
-      APP.loadData(url, cb);
+      urlOtp = baseUrl + lat + "," + lng + "&date=2017/12/20&time=" + time + "&mode=" + mode + cf1;
+      APP.loadDataOtp(urlOtp);
     });
     // take a snap of the isochrone
     $('#snap').on('click', function(){
@@ -127,7 +138,6 @@ APP.initMap = function(cb){
       console.log(snapIso[ct]);
       LC.addOverlay(snapIso[ct], "Iso"+ct);
     });
-    cb(null);
 };
 // function to remove SVG
 APP.removeIso = function(){
@@ -167,24 +177,69 @@ APP.initIso = function(dataJson){
     dataOverlay.addTo(map)
    });
 };
-// function to load the datas
-APP.loadData = function(cb){
-    d3.json(url, function(error, data) {
+// function to load the datas of OTP API
+APP.loadDataOtp = function(){
+    d3.json(urlOtp, function(error, data) {
       if(error) {
         console.log(error);
       }
     // d3.json("static/iso5.json", function(data) {
       APP.jsonToArray(data);
       APP.stopsTooltip(stops);
-      cb(null);
     });
 }
+
+// function to load the datas of OTP API
+APP.loadDataPsql = function(){
+    d3.json(urlPsql, function(error, data) {
+      if(error) {
+        console.log(error);
+      }
+      dataS = data;
+      // empty array to push new datas
+      dataScaleS = [];
+      for (let i=0; i < data.length; i++){
+        dataScaleS.push(
+          data[i].time
+        );
+      }
+      for (i = 0; i < data.length; i++){
+        dataArrayS.push({
+          id : data[i].dest,
+          time : data[i].time
+        });
+      }
+    });
+    if(urlPsql.indexOf("sa")) {
+      console.log(urlPsql);
+      APP.loadStops(dataArrayS);
+    } else {
+      console.log(urlPsql);
+      APP.loadPixels(dataArrayS);
+    }
+}
 // function to load the datas
-APP.loadStops = function(cb){
+APP.loadStops = function(dataArrayS){
     d3.json("stops", function(error, data) {
       if(error) {
         console.log(error);
       }
+      console.log(dataArrayS);
+      console.log(data);
+      //Retrieve the id of the data and link it to the geospatial geoid
+      // for (let i = 0; i < data.length; i++) {
+      //   //Grab the commune geoID
+      //   let dataId = data[i].geoid;
+      //   //For each entity in the geojson get the geoID and assign the data value (if there is a corresponding one)
+      //   for (let j=0; j < geom.com.features.length; j++) {
+      //     let jsonId = geom.com.features[j].properties.geoid;
+      //     if (dataId == jsonId) {
+      //       geom.com.features[j].properties.value = data[i].value;
+      //       break;
+      //     }
+      //   }
+      // }
+
       stops = data.features;
       let stopsOverlay = L.d3SvgOverlay(function(sel, proj) {
       let upd = sel.selectAll('path')
@@ -200,7 +255,7 @@ APP.loadStops = function(cb){
           upd.attr('stroke-width', 0.1 / proj.scale); // for updating the stroke when zooming
       });
       // Add in the layer control
-      LC.addOverlay(stopsOverlay, "Arrêts de TP");
+      // LC.addOverlay(stopsOverlay, "Arrêts de TP");
       // load the data to project
       d3.json(stops, function(data) {
         console.log(stops);
@@ -208,15 +263,40 @@ APP.loadStops = function(cb){
       });
     });
     APP.stopsTooltip(stops);
-    cb(null);
  };
  // function to load the datas
- APP.loadPixels = function(cb){
+ APP.loadPixels = function(dataArrayS){
      d3.json("pix", function(error, data) {
        if(error) {
          console.log(error);
        }
        pixels = data.features;
+       console.log(dataArrayS);
+       console.log(pixels);
+       //Define the color domain according to the data
+       // reverse the colors because of superimpose
+       var colorsRS = colors.slice().reverse();
+       // min = d3.min(dataSort);
+       // max = d3.max(dataSort);
+       var colorS = d3.scale.threshold()
+                           .domain([0, 601, 1201, 1801, 2401, 3001, 3601])
+                           .range(colorsRS);
+       console.log(pixels.length);
+       // Retrieve the id of the data and link it to the geospatial geoid
+       for (let i = 0; i < dataArrayS.length; i++) {
+
+         //Grab the pixel ID
+         let dataId = dataArrayS[i].id;
+         //For each pixel get the ID and assign the data value (if there is a corresponding one)
+         for (let j=0; j < pixels.length; j++) {
+           let jsonId = pixels[j].properties.rastid;
+           if (dataId == jsonId) {
+             pixels[j].properties.time = dataArrayS[i].time;
+             break;
+           }
+         }
+       }
+       console.log(pixels);
        let pixelsOverlay = L.d3SvgOverlay(function(sel, proj) {
        let upd = sel.selectAll('path')
                     .data(pixels);
@@ -225,27 +305,29 @@ APP.loadStops = function(cb){
               .append('path')
               .attr('d', proj.pathFromGeojson)
               .attr('fill-opacity', '0.2')
-              .attr('fill', function(d){ return "red"})
+              .attr('fill', function(d){
+               let value = d.properties.time;
+               if (value) {
+                 return colorS(value);
+                 } else {
+                   return "#ccc";
+                 }
+              })
               .classed("pix", true)
               .attr("pointer-events","visible");
            upd.attr('stroke-width', 0.1 / proj.scale); // for updating the stroke when zooming
        });
        // Add in the layer control
-       LC.addOverlay(pixelsOverlay, "Pixels de populations");
+       // LC.addOverlay(pixelsOverlay, "Pixels de populations");
        // load the data to project
        d3.json(pixels, function(data) {
-         console.log(pixels);
        pixelsOverlay.addTo(map)
        });
      });
-     cb(null);
   };
 // function to store the data into arrays
 APP.jsonToArray = function(data){
   dataJson = data.features;
-
-  colors = colorbrewer.Spectral[10]; // 7
-  console.log(colors);
   // empty array to push new datas
   dataScale = [];
   for (let i=0; i < data.features.length; i++){
@@ -266,12 +348,12 @@ APP.jsonToArray = function(data){
 APP.stopsTooltip = function(stops){
   setTimeout(function(){
       d3.selectAll('.stops')
-        .on('mouseover', function(stops) { console.log("dasf");
+        .on('mouseover', function(stops) {
           d3.select(this)
           .transition()
           .duration(50)
           tooltipMap.html(function(){
-            console.log(stops.properties.stop_name);
+            // console.log(stops.properties.stop_name);
             return `Arrêt: ${stops.properties.stop_name}`;
           })
           .transition()
