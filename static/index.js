@@ -8,6 +8,8 @@ let windowWidth = $(window).width();  // returns width of browser viewport
 // Map
 let map;
 
+let check = true;
+
 let snapIso = [];
 let dataOverlay;
 
@@ -60,15 +62,15 @@ let urlPsql = "sa_tp2069"
 APP.main = function(stops){
   APP.initMap();
   d3.queue()
-    .defer(APP.loadDataOtp)
-    .defer(APP.loadDataPsql)
+    // .defer(APP.loadDataOtp)
+    // .defer(APP.loadDataPsql)
     // .defer(APP.loadPixels)
     // .defer(APP.loadStops)
-    .await(function(error,stops) {
-      if (error) throw error;
-      console.log("AWAIT");
-      APP.stopsTooltip(stops);
-    });
+    // .await(function(error,stops) {
+    //   if (error) throw error;
+    //   console.log("AWAIT");
+    //   APP.stopsTooltip(stops);
+    // });
 };
 
 // Initializing map - leaflet with cartodb basemap
@@ -97,17 +99,37 @@ APP.initMap = function(){
     L.control.scale({imperial: false}).addTo(map);
     // on click change the datas
     map.on('click', function(e){
-      var coord = e.latlng;
-      lat = coord.lat;
-      lng = coord.lng;
-      urlOtp = baseUrl + lat + "," + lng + "&date=2017/12/20&time=" + time + "&mode=" + mode + cf1;
-      APP.loadDataOtp(urlOtp);
+      if(check == true){
+        var coord = e.latlng;
+        lat = coord.lat;
+        lng = coord.lng;
+        urlOtp = baseUrl + lat + "," + lng + "&date=2017/12/20&time=" + time + "&mode=" + mode + cf1;
+        APP.loadDataOtp(urlOtp);
+      } else {
+        $('.pix').on('click', function(){
+          // get the right pixel man
+        });
+      }
     });
     // Getting tooltip ready for showing data
     tooltipMap = d3.select('#map')
     .append('div')
     .attr('class', 'tooltip');
-    // changem mode of the isochrone
+    // Switch button to change mode vector/raster
+    $('#switch-button').on('click', function(){
+      if(check == true){
+        console.log(check);
+        APP.removeIso();
+        APP.loadDataPsql(urlPsql);
+        check = false;
+      } else {
+        console.log(check);
+        APP.removeRast();
+        APP.loadDataOtp(urlOtp)
+        check = true;
+      }
+    });
+    // change mode of the isochrone
     $('.transport-mode select').on('change', function(){
       mode = $('.transport-mode select').val();
       urlOtp = baseUrl + lat + "," + lng + "&date=2017/12/20&time=" + time + "&mode=" + mode + cf1;
@@ -133,15 +155,20 @@ APP.initMap = function(){
       $(".isochrone").addClass('snapIso'+ct)
                      .removeClass('isochrone');
       //add it to a control
-      // ATTENTION je crois que le controleur efface les elements en fonction de l'id donc aléatoire
+      // ATTENTION le controleur efface les elements en fonction de l'id donc aléatoire
       snapIso[ct] = dataOverlay;
       console.log(snapIso[ct]);
       LC.addOverlay(snapIso[ct], "Iso"+ct);
     });
+    APP.loadDataOtp(urlOtp);
 };
-// function to remove SVG
+// function to remove vector isochrones
 APP.removeIso = function(){
   d3.select(".isochrone").remove();
+};
+// function to remove raster isochrones
+APP.removeRast = function(){
+  $(".pix").remove();
 };
 // function to initialize SVG
 APP.initIso = function(dataJson){
@@ -191,13 +218,14 @@ APP.loadDataOtp = function(){
 
 // function to load the datas of OTP API
 APP.loadDataPsql = function(){
+  // empty array to push new datas
+    dataArrayS = [];
+    dataScaleS = [];
     d3.json(urlPsql, function(error, data) {
       if(error) {
         console.log(error);
       }
       dataS = data;
-      // empty array to push new datas
-      dataScaleS = [];
       for (let i=0; i < data.length; i++){
         dataScaleS.push(
           data[i].time
@@ -224,22 +252,6 @@ APP.loadStops = function(dataArrayS){
       if(error) {
         console.log(error);
       }
-      console.log(dataArrayS);
-      console.log(data);
-      //Retrieve the id of the data and link it to the geospatial geoid
-      // for (let i = 0; i < data.length; i++) {
-      //   //Grab the commune geoID
-      //   let dataId = data[i].geoid;
-      //   //For each entity in the geojson get the geoID and assign the data value (if there is a corresponding one)
-      //   for (let j=0; j < geom.com.features.length; j++) {
-      //     let jsonId = geom.com.features[j].properties.geoid;
-      //     if (dataId == jsonId) {
-      //       geom.com.features[j].properties.value = data[i].value;
-      //       break;
-      //     }
-      //   }
-      // }
-
       stops = data.features;
       let stopsOverlay = L.d3SvgOverlay(function(sel, proj) {
       let upd = sel.selectAll('path')
