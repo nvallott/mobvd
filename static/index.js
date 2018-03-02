@@ -37,6 +37,10 @@ let dataSortS = [];
 //Color scale of the map
 let colorScaleRange = [];
 
+let colorsRRS;
+let colorRS;
+let pixels = [];
+
 let colors = colorbrewer.Spectral[10]; // 7
 // get the color from colorbrewer lib
 let colorsR;
@@ -58,6 +62,9 @@ let baseUrl = "http://localhost:8080/otp/routers/default/isochrone?&fromPlace="
 let urlOtp = baseUrl + lat + "," + lng + "&date=2017/12/20&time=" + time + "&mode=" + mode + cf1;
 // get data url from the otp server
 let urlPsql = "sa_tp2069"
+// var to know if json are loaded or not
+let pixLoaded = 0;
+let stopsLoaded = 0;
 // Initializing the whole script of the page
 APP.main = function(stops){
   APP.initMap();
@@ -106,8 +113,12 @@ APP.initMap = function(){
         urlOtp = baseUrl + lat + "," + lng + "&date=2017/12/20&time=" + time + "&mode=" + mode + cf1;
         APP.loadDataOtp(urlOtp);
       } else {
-        $('.pix').on('click', function(){
-          // get the right pixel man
+        d3.selectAll('.pix').on('click', function(d){
+          urlPsql= `sa_tp${d.properties.rastid}`;
+          console.log(urlPsql);
+          console.log("1");
+          APP.loadDataPsql(urlPsql); // changer pour changeColor
+          // get the right pixel
         });
       }
     });
@@ -162,13 +173,30 @@ APP.initMap = function(){
     });
     APP.loadDataOtp(urlOtp);
 };
+APP.changeColor = function (dataArrayS, pixels){
+  APP.dataJoin(dataArrayS, pixels)
+  d3.selectAll(".pix")
+    .transition()
+    .duration(200)
+    .attr('fill', function(d){
+     let value = d.properties.time;
+     if (value) {
+       return colorRS(value);
+       } else {
+         return "#ccc";
+       }
+    })
+};
 // function to remove vector isochrones
 APP.removeIso = function(){
   d3.select(".isochrone").remove();
 };
 // function to remove raster isochrones
 APP.removeRast = function(){
-  $(".pix").remove();
+  console.log("remove raster");
+  d3.select(".pix").remove();
+  // stopsLoaded = 0;
+  // pixLoaded = 0;
 };
 // function to initialize SVG
 APP.initIso = function(dataJson){
@@ -216,11 +244,14 @@ APP.loadDataOtp = function(){
     });
 }
 
-// function to load the datas of OTP API
+// DECOMPOSER LA FOCNTION LOADPSQL!!!! LE 3 NEST CHARGE QUA LA FIN AU CHANGECOLOR
+// function to load the datas of psql server
 APP.loadDataPsql = function(){
-  // empty array to push new datas
+  console.log("2");
+    // empty array to push new datas
     dataArrayS = [];
     dataScaleS = [];
+    console.log(dataArrayS);
     d3.json(urlPsql, function(error, data) {
       if(error) {
         console.log(error);
@@ -237,17 +268,36 @@ APP.loadDataPsql = function(){
           time : data[i].time
         });
       }
+      APP.choose();
+      console.log("3");
+      console.log(dataArrayS[1]);
     });
-    if(urlPsql.indexOf("sa")) {
-      console.log(urlPsql);
-      APP.loadStops(dataArrayS);
+}
+    // APP.dataJoin(dataArrayS, pixels);
+APP.choose = function(){
+  if(urlPsql.indexOf("sa")) {
+    console.log(urlPsql);
+    if(stopsLoaded==1){
+      console.log(stopsLoaded);
+      APP.changeColor(dataArrayS, pixels);
     } else {
-      console.log(urlPsql);
+      APP.loadStops(dataArrayS);
+    }
+  } else {
+    if(pixLoaded==1){
+      console.log("4");
+      console.log(pixels, "pixels");
+      APP.changeColor(dataArrayS, pixels);
+    } else{
+      console.log("pixels loaded",pixLoaded);
       APP.loadPixels(dataArrayS);
     }
+  }
 }
+
 // function to load the datas
 APP.loadStops = function(dataArrayS){
+  APP.removeRast();
     d3.json("stops", function(error, data) {
       if(error) {
         console.log(error);
@@ -275,6 +325,35 @@ APP.loadStops = function(dataArrayS){
       });
     });
     APP.stopsTooltip(stops);
+    stopsLoaded = 1;
+ };
+ APP.dataJoin = function(dataArrayS, pixels){
+   // Retrieve the id of the data and link it to the geospatial geoid
+   //For each pixel get the ID and assign the data value (if there is a corresponding one)
+  for (let j=0; j < pixels.length; j++) {
+     pixels[j].properties.time = 0;
+     let jsonId = pixels[j].properties.rastid;
+     for (let i = 0; i < dataArrayS.length; i++) {
+      //Grab the pixel ID
+      let dataId = dataArrayS[i].id;
+       if (dataId == jsonId) {
+         pixels[j].properties.time = dataArrayS[i].time;
+         break;
+       }
+     }
+   }
+ };
+ APP.colorize = function(){
+   //Define the color domain according to the data
+   // reverse the colors because of superimpose
+   colorsRRS = colors.slice().reverse();
+   min = d3.min(dataScaleS);
+   max = d3.max(dataScaleS);
+   console.log(min,max);
+   colorRS = d3.scale.threshold()
+                       .domain([min,max])
+                       // .domain([0, 601, 1201, 1801, 2401, 3001, 3601])
+                       .range(colorsRRS);
  };
  // function to load the datas
  APP.loadPixels = function(dataArrayS){
@@ -282,33 +361,11 @@ APP.loadStops = function(dataArrayS){
        if(error) {
          console.log(error);
        }
+       pixLoaded = 1;
+       console.log("pixels loaded",pixLoaded);
        pixels = data.features;
-       console.log(dataArrayS);
-       console.log(pixels);
-       //Define the color domain according to the data
-       // reverse the colors because of superimpose
-       var colorsRS = colors.slice().reverse();
-       // min = d3.min(dataSort);
-       // max = d3.max(dataSort);
-       var colorS = d3.scale.threshold()
-                           .domain([0, 601, 1201, 1801, 2401, 3001, 3601])
-                           .range(colorsRS);
-       console.log(pixels.length);
-       // Retrieve the id of the data and link it to the geospatial geoid
-       for (let i = 0; i < dataArrayS.length; i++) {
-
-         //Grab the pixel ID
-         let dataId = dataArrayS[i].id;
-         //For each pixel get the ID and assign the data value (if there is a corresponding one)
-         for (let j=0; j < pixels.length; j++) {
-           let jsonId = pixels[j].properties.rastid;
-           if (dataId == jsonId) {
-             pixels[j].properties.time = dataArrayS[i].time;
-             break;
-           }
-         }
-       }
-       console.log(pixels);
+       APP.colorize();
+       APP.dataJoin(dataArrayS, pixels);
        let pixelsOverlay = L.d3SvgOverlay(function(sel, proj) {
        let upd = sel.selectAll('path')
                     .data(pixels);
@@ -320,7 +377,7 @@ APP.loadStops = function(dataArrayS){
               .attr('fill', function(d){
                let value = d.properties.time;
                if (value) {
-                 return colorS(value);
+                 return colorRS(value);
                  } else {
                    return "#ccc";
                  }
@@ -336,6 +393,8 @@ APP.loadStops = function(dataArrayS){
        pixelsOverlay.addTo(map)
        });
      });
+     pixLoaded = 1;
+     console.log("pixels loaded",pixLoaded);
   };
 // function to store the data into arrays
 APP.jsonToArray = function(data){

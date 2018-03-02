@@ -3,22 +3,29 @@
 ##################
 ### A FAIRE
 
-* choisir otp ou flask
+* change color avec ANIMATION
 * implémenter la BD avec
   * lier avec pop/emp > tooltip
 * Postgis distance du pixel ?
-* lier stop id avec les coord !!!
+
+### EN COURS
+
+* change color des pixels et stops pour ne pas recharger a chaque fois le json
+* boutton raster/ vecteur
+* choisir otp ou flask
 
 
 ### A CORRIGER
 
-* les iso dans le control
+
+* les iso dans le snap
 * les tooltip pas parfait (disparition après reload)
+  - dépend de quand  on lance les pixels (normalement après le premier chargement donc ok)
 * mapbox ajout de labels à petite échelle
 
 ### FAIT!
 
-*
+* lier stop id avec les coord !!!
 * implémenter la BD avec
   * tous les pixels
   * les données SA et SB
