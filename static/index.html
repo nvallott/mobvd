@@ -38,21 +38,21 @@
                       <select>
                         <option value="TRANSIT,WALK">Transports en commun</option>
                         <option value="CAR,WALK">Transports individuels</option>
-                        <option value="BICYCLE">Vélo</option>
+                        <option value="BICYCLE">Vélo (uniquement isochrones)</option>
                       </select>
                     </li>
-                    <li class="transport-time">
+                    <li class="transport-time isoDeco">
                       <input id="time" type="time" value="07:30:00">
                     </li>
-                    <li class="transport-cutOff">
+                    <li class="transport-cutOff isoDeco">
                       <span id="sliderLabel">Longueur de l'isochrone</span>
                         <input id="slider1" class="sliderIso" type="range" min=600 max=3600 step=600 value=1800>
                     </li>
                     <li>
-                      <output id="slider1_val">30 min</output>
+                      <output class="isoDeco" id="slider1_val">30 min</output>
                     </li>
                     <li>
-                      <button type="button" id="snap">CAPTURE</button>
+                      <button class="isoDeco" type="button" id="snap">CAPTURE</button>
                     </li>
                 </ul>
             </div>

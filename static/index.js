@@ -61,7 +61,9 @@ let baseUrl = "http://localhost:8080/otp/routers/default/isochrone?&fromPlace="
 // get data url from the otp server
 let urlOtp = baseUrl + lat + "," + lng + "&date=2017/12/20&time=" + time + "&mode=" + mode + cf1;
 // get data url from the otp server
-let urlPsql = "sa_tp2069"
+let rastId = "2069";
+let rastMode = "tp"
+let urlPsql = "sa_" + rastMode + rastId;
 // var to know if json are loaded or not
 let pixLoaded = 0;
 let stopsLoaded = 0;
@@ -114,7 +116,8 @@ APP.initMap = function(){
         APP.loadDataOtp(urlOtp);
       } else {
         d3.selectAll('.pix').on('click', function(d){
-          urlPsql= `sa_tp${d.properties.rastid}`;
+          rastId = d.properties.rastid;
+          urlPsql= "sa_" + rastMode + rastId;
           console.log(urlPsql);
           console.log("1");
           APP.loadDataPsql(urlPsql); // changer pour changeColor
@@ -131,20 +134,32 @@ APP.initMap = function(){
       if(check == true){
         console.log(check);
         APP.removeIso();
+        APP.removeIsoDeco();
         APP.loadDataPsql(urlPsql);
         check = false;
       } else {
         console.log(check);
         APP.removeRast();
-        APP.loadDataOtp(urlOtp)
+        APP.loadDataOtp(urlOtp);
+        $(".isoDeco").show();
         check = true;
       }
     });
     // change mode of the isochrone
     $('.transport-mode select').on('change', function(){
       mode = $('.transport-mode select').val();
-      urlOtp = baseUrl + lat + "," + lng + "&date=2017/12/20&time=" + time + "&mode=" + mode + cf1;
-      APP.loadDataOtp(urlOtp);
+      if(check == true){
+        urlOtp = baseUrl + lat + "," + lng + "&date=2017/12/20&time=" + time + "&mode=" + mode + cf1;
+        APP.loadDataOtp(urlOtp);
+      } else {
+        if (mode == "TRANSIT,WALK") {
+          rastMode = "tp";
+        } else if (mode == "CAR,WALK"){
+          rastMode = "tim";
+        }
+          urlPsql = "sa_" + rastMode + rastId;
+          APP.loadDataPsql(urlPsql);
+        }
     });
     // change time of the isochrone
     $('.transport-time input').on('change', function(){
@@ -177,10 +192,11 @@ APP.changeColor = function (dataArrayS, pixels){
   APP.dataJoin(dataArrayS, pixels)
   d3.selectAll(".pix")
     .transition()
-    .duration(200)
+    .duration(400)
     .attr('fill', function(d){
      let value = d.properties.time;
      if (value) {
+       d.properties.color = colorRS(value);
        return colorRS(value);
        } else {
          return "#ccc";
@@ -188,15 +204,18 @@ APP.changeColor = function (dataArrayS, pixels){
     })
 };
 // function to remove vector isochrones
+APP.removeIsoDeco = function(){
+  $(".isoDeco").hide();
+};
 APP.removeIso = function(){
-  d3.select(".isochrone").remove();
+  $(".isochrone").remove();
 };
 // function to remove raster isochrones
 APP.removeRast = function(){
   console.log("remove raster");
-  d3.select(".pix").remove();
-  // stopsLoaded = 0;
-  // pixLoaded = 0;
+  $(".pix").hide();
+  stopsLoaded = 0;
+  pixLoaded = 0;
 };
 // function to initialize SVG
 APP.initIso = function(dataJson){
@@ -217,13 +236,14 @@ APP.initIso = function(dataJson){
     upd = sel.selectAll('path').data(dataJson);
 
       // update the projection of the SVG
+      // if(check == true){}
       upd.enter()
          .append('path')
          .attr('d', proj.pathFromGeojson)
          .attr('fill-opacity', '0.2')
          .attr('fill', function(d){return color(d.properties.time);})
-         .style('position','relative')
-         .attr('pointer-events','visible')
+         // .style('position','relative')
+         // .attr('pointer-events','visible')
          .classed("isochrone", true);
       upd.attr('stroke-width', 0.1 / proj.scale);// for updating the stroke when zooming
   });
@@ -244,10 +264,8 @@ APP.loadDataOtp = function(){
     });
 }
 
-// DECOMPOSER LA FOCNTION LOADPSQL!!!! LE 3 NEST CHARGE QUA LA FIN AU CHANGECOLOR
 // function to load the datas of psql server
 APP.loadDataPsql = function(){
-  console.log("2");
     // empty array to push new datas
     dataArrayS = [];
     dataScaleS = [];
@@ -269,8 +287,6 @@ APP.loadDataPsql = function(){
         });
       }
       APP.choose();
-      console.log("3");
-      console.log(dataArrayS[1]);
     });
 }
     // APP.dataJoin(dataArrayS, pixels);
@@ -285,7 +301,6 @@ APP.choose = function(){
     }
   } else {
     if(pixLoaded==1){
-      console.log("4");
       console.log(pixels, "pixels");
       APP.changeColor(dataArrayS, pixels);
     } else{
@@ -351,8 +366,8 @@ APP.loadStops = function(dataArrayS){
    max = d3.max(dataScaleS);
    console.log(min,max);
    colorRS = d3.scale.threshold()
-                       .domain([min,max])
-                       // .domain([0, 601, 1201, 1801, 2401, 3001, 3601])
+                       // .domain([min,max])
+                       .domain([0, 601, 1201, 1801, 2401, 3001, 3601])
                        .range(colorsRRS);
  };
  // function to load the datas
@@ -377,6 +392,7 @@ APP.loadStops = function(dataArrayS){
               .attr('fill', function(d){
                let value = d.properties.time;
                if (value) {
+                 // console.log(colorRS(value));
                  return colorRS(value);
                  } else {
                    return "#ccc";

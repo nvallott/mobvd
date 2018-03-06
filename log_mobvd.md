@@ -3,21 +3,20 @@
 ##################
 ### A FAIRE
 
-* change color avec ANIMATION
+
 * implémenter la BD avec
   * lier avec pop/emp > tooltip
 * Postgis distance du pixel ?
 
 ### EN COURS
 
-* change color des pixels et stops pour ne pas recharger a chaque fois le json
-* boutton raster/ vecteur
-* choisir otp ou flask
+
+* dans raster : choix tim tp
 
 
 ### A CORRIGER
 
-
+* les iso reapparaissent après le zoom
 * les iso dans le snap
 * les tooltip pas parfait (disparition après reload)
   - dépend de quand  on lance les pixels (normalement après le premier chargement donc ok)
@@ -25,6 +24,12 @@
 
 ### FAIT!
 
+* corriger la supperposition des pixels (hide au lieu de remove!)
+* hide/show deco iso
+* change color avec ANIMATION
+* choisir otp ou flask
+* boutton raster/ vecteur
+* change color des pixels et stops pour ne pas recharger a chaque fois le json
 * lier stop id avec les coord !!!
 * implémenter la BD avec
   * tous les pixels
