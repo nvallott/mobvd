@@ -75,8 +75,8 @@ def pix(epsg=4326):
 def do_pix(epsg=4326):
     cur = conn.cursor() # get a query cursor
     # SQL query:
-    sql = """SELECT rastid AS rastid, ST_AsGeoJson(ST_Transform(geom, %i), 7) AS geom
-             FROM pixels_rast""" % epsg
+    sql = """SELECT rastid AS rastid, sum AS sum, ST_AsGeoJson(ST_Transform(geom, %i), 7) AS geom
+             FROM pixels_pop2""" % epsg
     cur.execute(sql)
     # retrieve the query result
     rows = cur.fetchall()
@@ -86,9 +86,11 @@ def do_pix(epsg=4326):
         features.append({
             "type": "Feature",
             "properties": {
-                "rastid": row[0]
+                "rastid": row[0],
+                "sum": row[1]
+
             },
-            "geometry": json.loads(row[1])
+            "geometry": json.loads(row[2])
         })
     feature_collection = {
         "type": "FeatureCollection",

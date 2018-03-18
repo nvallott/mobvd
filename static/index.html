@@ -13,7 +13,7 @@
     <link rel="stylesheet" href="static/lib/bootstrap.min.css">
     <script src="static/lib/d3-queue.v3.min.js"></script>
     <script src="static/lib/colorbrewer.v1.min.js"></script>
-    <!-- STATIC PATH FOR FLASK -->
+    <script src="static/lib/d3-legend.min.js"></script>
     <script src="static/lib/L.D3SvgOverlay.min.js"></script>
     <link rel="stylesheet" href="static/style.css">
     <script src="static/index.js" charset="utf-8"></script>
@@ -22,7 +22,7 @@
 <!-- HEADER - NAVBAR & LINKS -->
 <header>
     <nav class="navbar navbar-inverse navbar-fixed-top"> <!--inverse for styling - fixed top so header is fixed on top whatever scrolling-->
-        <div class="container">
+        <div>
             <div class="navbar-header">
               <a class="navbar-brand" href="http://127.0.0.1:5000/">mobvd</a>
               <label class="switch">
@@ -30,7 +30,7 @@
                   <span class="slider round"></span>
               </label>
             </div>
-            <div id="navbar" class="collapse navbar-collapse">
+            <div class="navbar-header navbar-inverse">
                 <ul class="nav navbar-nav">
                     <!-- <li><a target="_blank" href="https://github.com/nvallott/mobvd">Projet Github</a></li>
                     <li><a target="_blank" href="mailto:nicolas.vallotton@unil.ch">Contact</a></li> -->

@@ -140,6 +140,7 @@ APP.initMap = function(){
       } else {
         console.log(check);
         APP.removeRast();
+        APP.removeLegend();
         APP.loadDataOtp(urlOtp);
         $(".isoDeco").show();
         check = true;
@@ -202,6 +203,15 @@ APP.changeColor = function (dataArrayS, pixels){
          return "#ccc";
        }
     })
+    .attr('class', function(d){
+     let value = d.properties.time;
+     if (value) {
+       d.properties.color = colorRS(value);
+       return "pix " + colorRS(value);
+       } else {
+         return "pix #ccc";
+       }
+    })
 };
 // function to remove vector isochrones
 APP.removeIsoDeco = function(){
@@ -224,7 +234,7 @@ APP.initIso = function(dataJson){
     return a - b;
   });
   // reverse the colors because of superimpose
-  var colorsR = colors.slice().reverse();
+  colorsR = colors.slice().reverse();
   // min = d3.min(dataSort);
   // max = d3.max(dataSort);
   var color = d3.scale.threshold()
@@ -258,7 +268,6 @@ APP.loadDataOtp = function(){
       if(error) {
         console.log(error);
       }
-    // d3.json("static/iso5.json", function(data) {
       APP.jsonToArray(data);
       APP.stopsTooltip(stops);
     });
@@ -274,6 +283,7 @@ APP.loadDataPsql = function(){
       if(error) {
         console.log(error);
       }
+      console.log(data);
       dataS = data;
       for (let i=0; i < data.length; i++){
         dataScaleS.push(
@@ -377,8 +387,8 @@ APP.loadStops = function(dataArrayS){
          console.log(error);
        }
        pixLoaded = 1;
-       console.log("pixels loaded",pixLoaded);
        pixels = data.features;
+       console.log(pixels);
        APP.colorize();
        APP.dataJoin(dataArrayS, pixels);
        let pixelsOverlay = L.d3SvgOverlay(function(sel, proj) {
@@ -391,6 +401,7 @@ APP.loadStops = function(dataArrayS){
               .attr('fill-opacity', '0.2')
               .attr('fill', function(d){
                let value = d.properties.time;
+               // let value = d.properties.sum;
                if (value) {
                  // console.log(colorRS(value));
                  return colorRS(value);
@@ -398,7 +409,16 @@ APP.loadStops = function(dataArrayS){
                    return "#ccc";
                  }
               })
-              .classed("pix", true)
+              .attr('class', function(d){
+               let value = d.properties.time;
+               // let value = d.properties.sum;
+               if (value) {
+                 // console.log(colorRS(value));
+                 return "pix " + colorRS(value);
+                 } else {
+                   return "pix #ccc";
+                 }
+              })
               .attr("pointer-events","visible");
            upd.attr('stroke-width', 0.1 / proj.scale); // for updating the stroke when zooming
        });
@@ -410,7 +430,8 @@ APP.loadStops = function(dataArrayS){
        });
      });
      pixLoaded = 1;
-     console.log("pixels loaded",pixLoaded);
+     APP.createLegend();
+     APP.pixelsTooltip();
   };
 // function to store the data into arrays
 APP.jsonToArray = function(data){
@@ -423,14 +444,45 @@ APP.jsonToArray = function(data){
     );
   }
   for (i = 0; i < data.features.length; i++){
+    console.log(data.features[i].properties);
     dataArray.push({
       id : data.features[i].id,
       time : data.features[i].properties.time
     });
   }
+
   APP.initIso(dataJson);
 };
 
+// Defining tooltip events
+APP.pixelsTooltip = function(pixels){
+  setTimeout(function(){
+      d3.selectAll('.pix')
+        .on('mouseover', function(pixels) {
+          console.log(d3.select(this).attr("class"))
+          d3.select(this)
+          .transition()
+          .duration(50)
+          tooltipMap.html(function(){
+            // console.log(stops.properties.stop_name);
+            return `Population: ${pixels.properties.sum}`;
+          })
+          .transition()
+          .duration(100)
+          .style('opacity', 0.8)
+          .style('left', `${d3.event.pageX}px`)
+          .style('top', `${d3.event.pageY}px`);
+        })
+        .on('mouseout', function() {
+          d3.select(this)
+          .transition()
+          .duration(150)
+          tooltipMap.transition()
+          .duration(150)
+          .style("opacity", 0);
+        });
+  }, 500);
+};
 // Defining tooltip events
 APP.stopsTooltip = function(stops){
   setTimeout(function(){
@@ -459,3 +511,27 @@ APP.stopsTooltip = function(stops){
         });
   }, 500);
 };
+
+APP.createLegend = function(){
+
+  let legend = L.control({position: 'bottomright'});
+
+  legend.onAdd = function (map) {
+
+      let div = L.DomUtil.create('div', 'info legend'),
+          grades = [0, 10, 20, 30, 40, 50, 60];
+      div.innerHTML = 'Temps de transport en minutes' + '<br>'
+      // loop through our density intervals and generate a label with a colored square for each interval
+      for (let i = 0; i < grades.length; i++) {
+          div.innerHTML +=
+              '<i style="background:' + colorsR[i+1] + '"></i> ' +
+              grades[i] + (grades[i + 1] ? '&ndash;' + grades[i + 1] + '<br>' : '+');
+      }      return div;
+  };
+
+  legend.addTo(map);
+}
+
+APP.removeLegend = function(){
+  $(".legend").remove();
+}
