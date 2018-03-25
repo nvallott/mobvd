@@ -37,6 +37,8 @@ let dataSortS = [];
 //Color scale of the map
 let colorScaleRange = [];
 
+let dataSum = [];
+
 let colorsRRS;
 let colorRS;
 let pixels = [];
@@ -299,28 +301,25 @@ APP.loadDataPsql = function(){
       APP.choose();
     });
 }
-    // APP.dataJoin(dataArrayS, pixels);
+// fucntion to choose the type of pixels to load
 APP.choose = function(){
   if(urlPsql.indexOf("sa")) {
     console.log(urlPsql);
     if(stopsLoaded==1){
-      console.log(stopsLoaded);
       APP.changeColor(dataArrayS, pixels);
     } else {
       APP.loadStops(dataArrayS);
     }
   } else {
     if(pixLoaded==1){
-      console.log(pixels, "pixels");
       APP.changeColor(dataArrayS, pixels);
     } else{
-      console.log("pixels loaded",pixLoaded);
       APP.loadPixels(dataArrayS);
     }
   }
 }
 
-// function to load the datas
+// function to load the datas of stops
 APP.loadStops = function(dataArrayS){
   APP.removeRast();
     d3.json("stops", function(error, data) {
@@ -352,22 +351,42 @@ APP.loadStops = function(dataArrayS){
     APP.stopsTooltip(stops);
     stopsLoaded = 1;
  };
+ // function to join datas to the pixels
  APP.dataJoin = function(dataArrayS, pixels){
    // Retrieve the id of the data and link it to the geospatial geoid
-   //For each pixel get the ID and assign the data value (if there is a corresponding one)
+   //For each pixel get the ID and assign the data value (if there is a corresponding one
   for (let j=0; j < pixels.length; j++) {
      pixels[j].properties.time = 0;
      let jsonId = pixels[j].properties.rastid;
+     let jsonPop = pixels[j].properties.sum;
      for (let i = 0; i < dataArrayS.length; i++) {
       //Grab the pixel ID
       let dataId = dataArrayS[i].id;
        if (dataId == jsonId) {
+         // spatial join
          pixels[j].properties.time = dataArrayS[i].time;
+         // find the number of people in each area
+         if (pixels[j].properties.time < 600) {
+           dataSum[0] =+ pixels[j].properties.sum;
+         } else if (pixels[j].properties.time > 600 && pixels[j].properties.time < 1200){
+           dataSum[1] =+ pixels[j].properties.sum;
+         } else if (pixels[j].properties.time > 1200 && pixels[j].properties.time < 1800){
+           dataSum[2] =+ pixels[j].properties.sum;
+         } else if (pixels[j].properties.time > 1800 && pixels[j].properties.time < 2400){
+           dataSum[3] =+ pixels[j].properties.sum;
+         } else if (pixels[j].properties.time > 2400 && pixels[j].properties.time < 3000){
+           dataSum[4] =+ pixels[j].properties.sum;
+         } else if (pixels[j].properties.time > 3000 && pixels[j].properties.time < 3600){
+           dataSum[5] =+ pixels[j].properties.sum;
+         } else if (pixels[j].properties.time > 3600){
+           dataSum[6] =+ pixels[j].properties.sum;
+         }
          break;
        }
      }
    }
  };
+ // function to scale the colors of pixels
  APP.colorize = function(){
    //Define the color domain according to the data
    // reverse the colors because of superimpose
@@ -513,18 +532,18 @@ APP.stopsTooltip = function(stops){
 };
 
 APP.createLegend = function(){
-
+  // leaflet legend
   let legend = L.control({position: 'bottomright'});
-
+  // legend function
   legend.onAdd = function (map) {
 
       let div = L.DomUtil.create('div', 'info legend'),
           grades = [0, 10, 20, 30, 40, 50, 60];
-      div.innerHTML = 'Temps de transport en minutes' + '<br>'
+      div.innerHTML = 'Temps en minutes' + '<br>'
       // loop through our density intervals and generate a label with a colored square for each interval
       for (let i = 0; i < grades.length; i++) {
           div.innerHTML +=
-              '<i style="background:' + colorsR[i+1] + '"></i> ' +
+              + dataSum[i] + '<i style="background:' + colorsR[i+1] + '"></i> ' +
               grades[i] + (grades[i + 1] ? '&ndash;' + grades[i + 1] + '<br>' : '+');
       }      return div;
   };
