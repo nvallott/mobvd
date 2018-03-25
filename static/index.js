@@ -37,7 +37,7 @@ let dataSortS = [];
 //Color scale of the map
 let colorScaleRange = [];
 
-let dataSum = [];
+let dataSum = [0,0,0,0,0,0,0,0];
 
 let colorsRRS;
 let colorRS;
@@ -355,6 +355,7 @@ APP.loadStops = function(dataArrayS){
  APP.dataJoin = function(dataArrayS, pixels){
    // Retrieve the id of the data and link it to the geospatial geoid
    //For each pixel get the ID and assign the data value (if there is a corresponding one
+  dataSum = [0,0,0,0,0,0,0,0];
   for (let j=0; j < pixels.length; j++) {
      pixels[j].properties.time = 0;
      let jsonId = pixels[j].properties.rastid;
@@ -366,25 +367,32 @@ APP.loadStops = function(dataArrayS){
          // spatial join
          pixels[j].properties.time = dataArrayS[i].time;
          // find the number of people in each area
+
          if (pixels[j].properties.time < 600) {
-           dataSum[0] =+ pixels[j].properties.sum;
+           dataSum[0] += pixels[j].properties.sum;
          } else if (pixels[j].properties.time > 600 && pixels[j].properties.time < 1200){
-           dataSum[1] =+ pixels[j].properties.sum;
+           dataSum[1] += pixels[j].properties.sum;
          } else if (pixels[j].properties.time > 1200 && pixels[j].properties.time < 1800){
-           dataSum[2] =+ pixels[j].properties.sum;
+           dataSum[2] += pixels[j].properties.sum;
          } else if (pixels[j].properties.time > 1800 && pixels[j].properties.time < 2400){
-           dataSum[3] =+ pixels[j].properties.sum;
+           dataSum[3] += pixels[j].properties.sum;
          } else if (pixels[j].properties.time > 2400 && pixels[j].properties.time < 3000){
-           dataSum[4] =+ pixels[j].properties.sum;
+           dataSum[4] += pixels[j].properties.sum;
          } else if (pixels[j].properties.time > 3000 && pixels[j].properties.time < 3600){
-           dataSum[5] =+ pixels[j].properties.sum;
+           dataSum[5] += pixels[j].properties.sum;
          } else if (pixels[j].properties.time > 3600){
-           dataSum[6] =+ pixels[j].properties.sum;
+           dataSum[6] += pixels[j].properties.sum;
          }
+
          break;
        }
      }
    }
+   for (let k=0; k < dataSum.length-1; k++) {
+     dataSum[7] += dataSum[k];
+   }
+   console.log(dataSum);
+   APP.createLegend();
  };
  // function to scale the colors of pixels
  APP.colorize = function(){
@@ -449,7 +457,6 @@ APP.loadStops = function(dataArrayS){
        });
      });
      pixLoaded = 1;
-     APP.createLegend();
      APP.pixelsTooltip();
   };
 // function to store the data into arrays
@@ -478,7 +485,7 @@ APP.pixelsTooltip = function(pixels){
   setTimeout(function(){
       d3.selectAll('.pix')
         .on('mouseover', function(pixels) {
-          console.log(d3.select(this).attr("class"))
+          // console.log(d3.select(this).attr("class"))
           d3.select(this)
           .transition()
           .duration(50)
@@ -532,6 +539,7 @@ APP.stopsTooltip = function(stops){
 };
 
 APP.createLegend = function(){
+  APP.removeLegend();
   // leaflet legend
   let legend = L.control({position: 'bottomright'});
   // legend function
@@ -539,13 +547,17 @@ APP.createLegend = function(){
 
       let div = L.DomUtil.create('div', 'info legend'),
           grades = [0, 10, 20, 30, 40, 50, 60];
-      div.innerHTML = 'Temps en minutes' + '<br>'
+      let divHTML = `<table class="tableg"><tr><th class="th1">Population<br>par zone</th><th></th><th class="th2">Temps<br>en minutes</th></tr>`
       // loop through our density intervals and generate a label with a colored square for each interval
       for (let i = 0; i < grades.length; i++) {
-          div.innerHTML +=
-              + dataSum[i] + '<i style="background:' + colorsR[i+1] + '"></i> ' +
-              grades[i] + (grades[i + 1] ? '&ndash;' + grades[i + 1] + '<br>' : '+');
-      }      return div;
+          divHTML +=
+              `<tr><td class="td1"> ${dataSum[i]} </td><td class="td2"> <i style="background: ${colorsR[i+1]}"></i></td><td class="td3"> ${grades[i]}` + (grades[i + 1] ? '&ndash;' + grades[i + 1] + '<br>' : '+') +`</td></tr>`
+      }
+      divHTML += `</table>`
+      div.innerHTML = divHTML;
+      console.log(divHTML);
+      console.log(div);
+      return div;
   };
 
   legend.addTo(map);
