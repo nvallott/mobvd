@@ -6,13 +6,9 @@ import json
 app = flask.Flask(__name__)
 app.debug = True
 
-# Connect to PostGIS database
+# Connect to PostGIS databases
 conn = db.connect("dbname='mobvd' user='nvallott' host='localhost' password=''")
 conn2 = db.connect("dbname='mob_dev' user='nvallott' host='localhost' password=''")
-# Creates route to polygon layer
-# @app.route('/geom')
-# def geom(epsg=4326):
-#     return flask.jsonify({ "pixel": do_pixel(epsg), "stop": do_stop(epsg) })
 
 # Creating route for each indicator according to domain/theme value
 @app.route('/s<string:s><int:i>')

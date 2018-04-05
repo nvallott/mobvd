@@ -87,7 +87,7 @@ APP.main = function(stops){
 // Initializing map - leaflet with cartodb basemap
 APP.initMap = function(){
     // Initiaize the map
-    map = new L.map("map", {center: [46.51522, 6.62981], zoom: 9.5, minZoom: 6, maxZoom: 15, maxBounds: ([[45.8, 5.7],[47.5, 7.9]])});
+    map = new L.map("map", {center: [46.51522, 6.62981], zoom: 9.5, minZoom: 6, maxZoom: 17, maxBounds: ([[45.8, 5.7],[47.5, 7.9]])});
     let cartodb = L.tileLayer('https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png', {
         attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>, &copy;<a href="https://carto.com/attribution">CARTO</a>'
     });
@@ -476,7 +476,6 @@ APP.jsonToArray = function(data){
       time : data.features[i].properties.time
     });
   }
-
   APP.initIso(dataJson);
 };
 
@@ -485,12 +484,10 @@ APP.pixelsTooltip = function(pixels){
   setTimeout(function(){
       d3.selectAll('.pix')
         .on('mouseover', function(pixels) {
-          // console.log(d3.select(this).attr("class"))
           d3.select(this)
           .transition()
           .duration(50)
           tooltipMap.html(function(){
-            // console.log(stops.properties.stop_name);
             return `Population: ${pixels.properties.sum}`;
           })
           .transition()
@@ -537,32 +534,34 @@ APP.stopsTooltip = function(stops){
         });
   }, 500);
 };
-
+// Creation of the legend
 APP.createLegend = function(){
   APP.removeLegend();
   // leaflet legend
   let legend = L.control({position: 'bottomright'});
   // legend function
   legend.onAdd = function (map) {
-
+      // leaflet div
       let div = L.DomUtil.create('div', 'info legend'),
+          // 7 steps between 0 to 60 minutes
           grades = [0, 10, 20, 30, 40, 50, 60];
+      // labels of the legend
       let divHTML = `<table class="tableg"><tr><th class="th1">Population<br>par zone</th><th></th><th class="th2">Temps<br>en minutes</th></tr>`
       // loop through our density intervals and generate a label with a colored square for each interval
       for (let i = 0; i < grades.length; i++) {
           divHTML +=
               `<tr><td class="td1"> ${dataSum[i]} </td><td class="td2"> <i style="background: ${colorsR[i+1]}"></i></td><td class="td3"> ${grades[i]}` + (grades[i + 1] ? '&ndash;' + grades[i + 1] + '<br>' : '+') +`</td></tr>`
       }
+      // finish the div
       divHTML += `</table>`
       div.innerHTML = divHTML;
       console.log(divHTML);
       console.log(div);
       return div;
   };
-
   legend.addTo(map);
 }
-
+// remove the legend
 APP.removeLegend = function(){
   $(".legend").remove();
 }
