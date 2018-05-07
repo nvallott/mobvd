@@ -8,14 +8,14 @@ app.debug = True
 
 # Connect to PostGIS databases
 conn = db.connect("dbname='mobvd' user='nvallott' host='localhost' password=''")
-conn2 = db.connect("dbname='mob_dev' user='nvallott' host='localhost' password=''")
+conn2 = db.connect("dbname='mobt' user='nvallott' host='localhost' password=''")
 
 # Creating route for each indicator according to domain/theme value
 @app.route('/s<string:s><int:i>')
-def sb_tim(s, i):
+def sd(s, i):
     cur = conn2.cursor()     # get a query cursor
     # our SQL query:
-    sql = """SELECT id AS id, orig AS orig, dest AS dest, time AS time
+    sql = """SELECT id AS id, orig AS orig, dest AS dest, temps AS time
              FROM s%s%i""" % (s,i)
 
     try:
@@ -72,7 +72,7 @@ def do_pix(epsg=4326):
     cur = conn.cursor() # get a query cursor
     # SQL query:
     sql = """SELECT rastid AS rastid, sum AS sum, ST_AsGeoJson(ST_Transform(geom, %i), 7) AS geom
-             FROM pixels_pop2""" % epsg
+             FROM c_d7""" % epsg
     cur.execute(sql)
     # retrieve the query result
     rows = cur.fetchall()

@@ -7,20 +7,16 @@ let windowHeight = $(window).height();  // returns height of browser viewport
 let windowWidth = $(window).width();  // returns width of browser viewport
 // Map
 let map;
-
-let check = true;
-
+// to save the vector isochrone
 let snapIso = [];
+// d3 layer over the leaflet layer
 let dataOverlay;
-
+// data of the stops
 let stops = [];
-// Tooltip of the map
+// Tooltip of the map (mouse over)
 let tooltipMap;
-//Color scale of the map
-let color = [];
-// Array to stock the infos from from the json
+// Array to stock infos from the database
 let dataArray = [];
-// Array to stock the infos from from the json
 let dataArrayS = [];
 // Array of all json datas
 let dataJson = [];
@@ -36,50 +32,56 @@ let dataScaleS = [];
 let dataSortS = [];
 //Color scale of the map
 let colorScaleRange = [];
-
-let dataSum = [0,0,0,0,0,0,0,0];
-
-let colorsRRS;
-let colorRS;
+// var to stock population info datas
+let dataSum = [];
+// all the datas for the raster mode
 let pixels = [];
-
-let colors = colorbrewer.Spectral[10]; // 7
+//Color scale of the map
+let color = [];
+// colors used in the vector and raster mode from colorbewer lib
+let colors = colorbrewer.Spectral[10];
 // get the color from colorbrewer lib
 let colorsR;
+// d3 colors classification and the reverse version
+let colorRS;
+let colorsRRS;
 let min;
 let max;
+// check vector or raster mode
+let check = true;
+// count number of snapshot
 let ct = 0;
 // latitude and longitude from Lausanne station
 let lat = 46.516631;
 let lng = 6.629156;
 // ischrones cut off in secondes
-let isoVal = [600, 1200, 1800, 2400, 3000, 3600]
+let isoVal = [600, 1200, 1800, 2400, 3000, 3600];
 let valCf = 1800;
-let cf = "&cutoffSec="
+let cf = "&cutoffSec=";
 let cf1 = cf+ "1800";
 var mode = "TRANSIT,WALK";
-var time = "07:30";
-let baseUrl = "http://localhost:8080/otp/routers/default/isochrone?&fromPlace="
+var time = "07:00";
+let baseUrl = "http://localhost:8080/otp/routers/default/isochrone?&fromPlace=";
 // get data url from the otp server
 let urlOtp = baseUrl + lat + "," + lng + "&date=2017/12/20&time=" + time + "&mode=" + mode + cf1;
 // get data url from the otp server
-let rastId = "2069";
-let rastMode = "tp"
-let urlPsql = "sa_" + rastMode + rastId;
+// let rastId = "2570";
+let rastId = "18902";
+let rastMode = "t";
+let urlPsql = "sd_" + rastMode + rastId;
 // var to know if json are loaded or not
 let pixLoaded = 0;
 let stopsLoaded = 0;
 // Initializing the whole script of the page
 APP.main = function(stops){
   APP.initMap();
-  d3.queue()
+  // d3.queue()
     // .defer(APP.loadDataOtp)
     // .defer(APP.loadDataPsql)
     // .defer(APP.loadPixels)
     // .defer(APP.loadStops)
     // .await(function(error,stops) {
     //   if (error) throw error;
-    //   console.log("AWAIT");
     //   APP.stopsTooltip(stops);
     // });
 };
@@ -104,14 +106,14 @@ APP.initMap = function(){
       // here to add more layers
     };
 
-    LC = L.control.layers(baseLayers)
+    LC = L.control.layers(baseLayers);
     LC.addTo(map);
     // add scale to map
     L.control.scale({imperial: false}).addTo(map);
     // on click change the datas
     map.on('click', function(e){
       if(check == true){
-        var coord = e.latlng;
+        let coord = e.latlng;
         lat = coord.lat;
         lng = coord.lng;
         urlOtp = baseUrl + lat + "," + lng + "&date=2017/12/20&time=" + time + "&mode=" + mode + cf1;
@@ -119,9 +121,8 @@ APP.initMap = function(){
       } else {
         d3.selectAll('.pix').on('click', function(d){
           rastId = d.properties.rastid;
-          urlPsql= "sa_" + rastMode + rastId;
+          urlPsql= "sd_" + rastMode + rastId;
           console.log(urlPsql);
-          console.log("1");
           APP.loadDataPsql(urlPsql); // changer pour changeColor
           // get the right pixel
         });
@@ -133,14 +134,16 @@ APP.initMap = function(){
     .attr('class', 'tooltip');
     // Switch button to change mode vector/raster
     $('#switch-button').on('click', function(){
+      mode = $('.transport-mode select').val();
+      rastMode = mode.charAt(0).toLowerCase();
+      console.log(mode,rastMode, "switch");
       if(check == true){
-        console.log(check);
         APP.removeIso();
         APP.removeIsoDeco();
         APP.loadDataPsql(urlPsql);
         check = false;
       } else {
-        console.log(check);
+        urlOtp = baseUrl + lat + "," + lng + "&date=2017/12/20&time=" + time + "&mode=" + mode + cf1;
         APP.removeRast();
         APP.removeLegend();
         APP.loadDataOtp(urlOtp);
@@ -151,16 +154,23 @@ APP.initMap = function(){
     // change mode of the isochrone
     $('.transport-mode select').on('change', function(){
       mode = $('.transport-mode select').val();
+      rastMode = mode.charAt(0).toLowerCase();
+      console.log(rastMode);
       if(check == true){
         urlOtp = baseUrl + lat + "," + lng + "&date=2017/12/20&time=" + time + "&mode=" + mode + cf1;
         APP.loadDataOtp(urlOtp);
       } else {
-        if (mode == "TRANSIT,WALK") {
-          rastMode = "tp";
-        } else if (mode == "CAR,WALK"){
-          rastMode = "tim";
-        }
-          urlPsql = "sa_" + rastMode + rastId;
+      //   if (mode == "TRANSIT,WALK") {
+      //     console.log("transit");
+      //     rastMode = "t";
+      //   } else if (mode == "CAR,WALK"){
+      //     console.log("car");
+      //     rastMode = "c";
+      //   } else if (mode == "BICYCLE,WALK"){
+      //     console.log("bike");
+      //     rastMode = "b";
+      //   }
+          urlPsql = "sd_" + rastMode + rastId;
           APP.loadDataPsql(urlPsql);
         }
     });
@@ -186,18 +196,17 @@ APP.initMap = function(){
       //add it to a control
       // ATTENTION le controleur efface les elements en fonction de l'id donc aléatoire
       snapIso[ct] = dataOverlay;
-      console.log(snapIso[ct]);
       LC.addOverlay(snapIso[ct], "Iso"+ct);
     });
     APP.loadDataOtp(urlOtp);
 };
 APP.changeColor = function (dataArrayS, pixels){
-  APP.dataJoin(dataArrayS, pixels)
+  APP.dataJoin(dataArrayS, pixels);
   d3.selectAll(".pix")
     .transition()
     .duration(400)
     .attr('fill', function(d){
-     let value = d.properties.time;
+     var value = d.properties.time;
      if (value) {
        d.properties.color = colorRS(value);
        return colorRS(value);
@@ -206,14 +215,14 @@ APP.changeColor = function (dataArrayS, pixels){
        }
     })
     .attr('class', function(d){
-     let value = d.properties.time;
+     var value = d.properties.time;
      if (value) {
        d.properties.color = colorRS(value);
        return "pix " + colorRS(value);
        } else {
          return "pix #ccc";
        }
-    })
+    });
 };
 // function to remove vector isochrones
 APP.removeIsoDeco = function(){
@@ -224,7 +233,6 @@ APP.removeIso = function(){
 };
 // function to remove raster isochrones
 APP.removeRast = function(){
-  console.log("remove raster");
   $(".pix").hide();
   stopsLoaded = 0;
   pixLoaded = 0;
@@ -248,24 +256,26 @@ APP.initIso = function(dataJson){
     upd = sel.selectAll('path').data(dataJson);
 
       // update the projection of the SVG
-      // if(check == true){}
-      upd.enter()
-         .append('path')
-         .attr('d', proj.pathFromGeojson)
-         .attr('fill-opacity', '0.2')
-         .attr('fill', function(d){return color(d.properties.time);})
-         // .style('position','relative')
-         // .attr('pointer-events','visible')
-         .classed("isochrone", true);
-      upd.attr('stroke-width', 0.1 / proj.scale);// for updating the stroke when zooming
+      if(check == true){
+        upd.enter()
+           .append('path')
+           .attr('d', proj.pathFromGeojson)
+           .attr('fill-opacity', '0.2')
+           .attr('fill', function(d){return color(d.properties.time);})
+           // .style('position','relative')
+           // .attr('pointer-events','visible')
+           .classed("isochrone", true);
+        upd.attr('stroke-width', 0.1 / proj.scale);// for updating the stroke when zooming
+      }
   });
   // load the data to project
   d3.json(dataJson, function(data) {
-    dataOverlay.addTo(map)
+    dataOverlay.addTo(map);
    });
 };
 // function to load the datas of OTP API
 APP.loadDataOtp = function(){
+  console.log(mode,"3");
     d3.json(urlOtp, function(error, data) {
       if(error) {
         console.log(error);
@@ -273,21 +283,20 @@ APP.loadDataOtp = function(){
       APP.jsonToArray(data);
       APP.stopsTooltip(stops);
     });
-}
+};
 
 // function to load the datas of psql server
 APP.loadDataPsql = function(){
     // empty array to push new datas
     dataArrayS = [];
     dataScaleS = [];
-    console.log(dataArrayS);
     d3.json(urlPsql, function(error, data) {
       if(error) {
         console.log(error);
       }
-      console.log(data);
+      // console.log(data);
       dataS = data;
-      for (let i=0; i < data.length; i++){
+      for (var i=0; i < data.length; i++){
         dataScaleS.push(
           data[i].time
         );
@@ -300,10 +309,10 @@ APP.loadDataPsql = function(){
       }
       APP.choose();
     });
-}
+};
 // fucntion to choose the type of pixels to load
 APP.choose = function(){
-  if(urlPsql.indexOf("sa")) {
+  if(urlPsql.indexOf("sd")) {
     console.log(urlPsql);
     if(stopsLoaded==1){
       APP.changeColor(dataArrayS, pixels);
@@ -317,7 +326,7 @@ APP.choose = function(){
       APP.loadPixels(dataArrayS);
     }
   }
-}
+};
 
 // function to load the datas of stops
 APP.loadStops = function(dataArrayS){
@@ -327,17 +336,17 @@ APP.loadStops = function(dataArrayS){
         console.log(error);
       }
       stops = data.features;
-      let stopsOverlay = L.d3SvgOverlay(function(sel, proj) {
-      let upd = sel.selectAll('path')
+      var stopsOverlay = L.d3SvgOverlay(function(sel, proj) {
+      var upd = sel.selectAll('path')
                    .data(stops);
           // update the projection of the SVG
           upd.enter()
              .append('path')
              .attr('d', proj.pathFromGeojson)
              .attr('fill-opacity', '0.2')
-             .attr('fill', function(d){return "blue"})
+             .attr('fill', function(d){return "blue";})
              .attr('z-index', 1000)
-             .classed("stops", true)
+             .classed("stops", true);
           upd.attr('stroke-width', 0.1 / proj.scale); // for updating the stroke when zooming
       });
       // Add in the layer control
@@ -345,7 +354,7 @@ APP.loadStops = function(dataArrayS){
       // load the data to project
       d3.json(stops, function(data) {
         console.log(stops);
-      stopsOverlay.addTo(map)
+      stopsOverlay.addTo(map);
       });
     });
     APP.stopsTooltip(stops);
@@ -356,13 +365,13 @@ APP.loadStops = function(dataArrayS){
    // Retrieve the id of the data and link it to the geospatial geoid
    //For each pixel get the ID and assign the data value (if there is a corresponding one
   dataSum = [0,0,0,0,0,0,0,0];
-  for (let j=0; j < pixels.length; j++) {
+  for (var j=0; j < pixels.length; j++) {
      pixels[j].properties.time = 0;
-     let jsonId = pixels[j].properties.rastid;
-     let jsonPop = pixels[j].properties.sum;
-     for (let i = 0; i < dataArrayS.length; i++) {
+     var jsonId = pixels[j].properties.rastid;
+     var jsonPop = pixels[j].properties.sum;
+     for (var i = 0; i < dataArrayS.length; i++) {
       //Grab the pixel ID
-      let dataId = dataArrayS[i].id;
+      var dataId = dataArrayS[i].id;
        if (dataId == jsonId) {
          // spatial join
          pixels[j].properties.time = dataArrayS[i].time;
@@ -388,10 +397,9 @@ APP.loadStops = function(dataArrayS){
        }
      }
    }
-   for (let k=0; k < dataSum.length-1; k++) {
+   for (var k=0; k < dataSum.length-1; k++) {
      dataSum[7] += dataSum[k];
    }
-   console.log(dataSum);
    APP.createLegend();
  };
  // function to scale the colors of pixels
@@ -418,8 +426,8 @@ APP.loadStops = function(dataArrayS){
        console.log(pixels);
        APP.colorize();
        APP.dataJoin(dataArrayS, pixels);
-       let pixelsOverlay = L.d3SvgOverlay(function(sel, proj) {
-       let upd = sel.selectAll('path')
+       var pixelsOverlay = L.d3SvgOverlay(function(sel, proj) {
+       var upd = sel.selectAll('path')
                     .data(pixels);
            // update the projection of the SVG
            upd.enter()
@@ -427,8 +435,8 @@ APP.loadStops = function(dataArrayS){
               .attr('d', proj.pathFromGeojson)
               .attr('fill-opacity', '0.2')
               .attr('fill', function(d){
-               let value = d.properties.time;
-               // let value = d.properties.sum;
+               var value = d.properties.time;
+               // var value = d.properties.sum;
                if (value) {
                  // console.log(colorRS(value));
                  return colorRS(value);
@@ -437,8 +445,8 @@ APP.loadStops = function(dataArrayS){
                  }
               })
               .attr('class', function(d){
-               let value = d.properties.time;
-               // let value = d.properties.sum;
+               var value = d.properties.time;
+               // var value = d.properties.sum;
                if (value) {
                  // console.log(colorRS(value));
                  return "pix " + colorRS(value);
@@ -453,7 +461,7 @@ APP.loadStops = function(dataArrayS){
        // LC.addOverlay(pixelsOverlay, "Pixels de populations");
        // load the data to project
        d3.json(pixels, function(data) {
-       pixelsOverlay.addTo(map)
+       pixelsOverlay.addTo(map);
        });
      });
      pixLoaded = 1;
@@ -464,7 +472,7 @@ APP.jsonToArray = function(data){
   dataJson = data.features;
   // empty array to push new datas
   dataScale = [];
-  for (let i=0; i < data.features.length; i++){
+  for (var i=0; i < data.features.length; i++){
     dataScale.push(
       data.features[i].properties.time
     );
@@ -486,7 +494,7 @@ APP.pixelsTooltip = function(pixels){
         .on('mouseover', function(pixels) {
           d3.select(this)
           .transition()
-          .duration(50)
+          .duration(50);
           tooltipMap.html(function(){
             return `Population: ${pixels.properties.sum}`;
           })
@@ -499,7 +507,7 @@ APP.pixelsTooltip = function(pixels){
         .on('mouseout', function() {
           d3.select(this)
           .transition()
-          .duration(150)
+          .duration(150);
           tooltipMap.transition()
           .duration(150)
           .style("opacity", 0);
@@ -513,7 +521,7 @@ APP.stopsTooltip = function(stops){
         .on('mouseover', function(stops) {
           d3.select(this)
           .transition()
-          .duration(50)
+          .duration(50);
           tooltipMap.html(function(){
             // console.log(stops.properties.stop_name);
             return `Arrêt: ${stops.properties.stop_name}`;
@@ -538,25 +546,23 @@ APP.stopsTooltip = function(stops){
 APP.createLegend = function(){
   APP.removeLegend();
   // leaflet legend
-  let legend = L.control({position: 'bottomright'});
+  var legend = L.control({position: 'bottomright'});
   // legend function
   legend.onAdd = function (map) {
       // leaflet div
-      let div = L.DomUtil.create('div', 'info legend'),
+      var div = L.DomUtil.create('div', 'info legend'),
           // 7 steps between 0 to 60 minutes
           grades = [0, 10, 20, 30, 40, 50, 60];
       // labels of the legend
-      let divHTML = `<table class="tableg"><tr><th class="th1">Population<br>par zone</th><th></th><th class="th2">Temps<br>en minutes</th></tr>`
+      var divHTML = `<table class="tableg"><tr><th class="th1">Population<br>par zone</th><th></th><th class="th2">Temps<br>en minutes</th></tr>`
       // loop through our density intervals and generate a label with a colored square for each interval
-      for (let i = 0; i < grades.length; i++) {
+      for (var i = 0; i < grades.length; i++) {
           divHTML +=
               `<tr><td class="td1"> ${dataSum[i]} </td><td class="td2"> <i style="background: ${colorsR[i+1]}"></i></td><td class="td3"> ${grades[i]}` + (grades[i + 1] ? '&ndash;' + grades[i + 1] + '<br>' : '+') +`</td></tr>`
       }
       // finish the div
       divHTML += `</table>`
       div.innerHTML = divHTML;
-      console.log(divHTML);
-      console.log(div);
       return div;
   };
   legend.addTo(map);
