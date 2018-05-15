@@ -112,19 +112,25 @@ APP.initMap = function(){
     L.control.scale({imperial: false}).addTo(map);
     // on click change the datas
     map.on('click', function(e){
+      // true to load isochrones, false to load pixels
       if(check == true){
+        // isochrones
         let coord = e.latlng;
         lat = coord.lat;
         lng = coord.lng;
         urlOtp = baseUrl + lat + "," + lng + "&date=2017/12/20&time=" + time + "&mode=" + mode + cf1;
         APP.loadDataOtp(urlOtp);
       } else {
+        // pixels
         d3.selectAll('.pix').on('click', function(d){
+          // Remove and attr id to the selected pixel
+          $('#SEL').removeAttr('id');
+          this.id = 'SEL'
+          // get the good pixel
           rastId = d.properties.rastid;
           urlPsql= "sd_" + rastMode + rastId;
           console.log(urlPsql);
-          APP.loadDataPsql(urlPsql); // changer pour changeColor
-          // get the right pixel
+          APP.loadDataPsql(urlPsql);
         });
       }
     });
@@ -446,7 +452,6 @@ APP.loadStops = function(dataArrayS){
               })
               .attr('class', function(d){
                var value = d.properties.time;
-               // var value = d.properties.sum;
                if (value) {
                  // console.log(colorRS(value));
                  return "pix " + colorRS(value);
@@ -461,6 +466,7 @@ APP.loadStops = function(dataArrayS){
        // LC.addOverlay(pixelsOverlay, "Pixels de populations");
        // load the data to project
        d3.json(pixels, function(data) {
+
        pixelsOverlay.addTo(map);
        });
      });
@@ -554,7 +560,7 @@ APP.createLegend = function(){
           // 7 steps between 0 to 60 minutes
           grades = [0, 10, 20, 30, 40, 50, 60];
       // labels of the legend
-      var divHTML = `<table class="tableg"><tr><th class="th1">Population<br>par zone</th><th></th><th class="th2">Temps<br>en minutes</th></tr>`
+      var divHTML = `<table class="tableg"><tr><th class="th1">Pop et emplois<br>par zone</th><th></th><th class="th2">Temps<br>en minutes</th></tr>`
       // loop through our density intervals and generate a label with a colored square for each interval
       for (var i = 0; i < grades.length; i++) {
           divHTML +=

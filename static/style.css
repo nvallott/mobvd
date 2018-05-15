@@ -101,6 +101,11 @@ input:checked + .slider:before {
   transform: translateX(26px);
 }
 
+#SEL {
+  stroke: black;
+  fill: purple;
+}
+
 /* Rounded sliders */
 .slider.round {
   border-radius: 34px;
@@ -157,7 +162,6 @@ div.tooltip {
 td {
     text-align: center;
 }
-
 
 .leaflet-marker-icon, .leaflet-marker-shadow, .leaflet-image-layer, .leaflet-pane > svg path, .leaflet-tile-container {
 				pointer-events: visible;

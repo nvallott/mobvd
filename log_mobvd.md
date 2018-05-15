@@ -4,26 +4,39 @@
 ### A FAIRE
 
 
-* implémenter la BD avec
-  * lier avec pop/emp > tooltip
-* Postgis distance du pixel ?
+* créer un graph avec le bon TLM > otp WGS.tif sur le serveur
+	- tester les temps de parcours à vélo
+				* supprimer les temps de parcours à vélo (résultats mauvais/pas assez de résultats/trop longues distances)
+	- remplacer par une carte avec la différence temps TC/TIM
+		- récréer une nouvelle table ou charger les deux lors de l'affichage ?
+
+* carte accessibilité globale > temps moyen en TC/temps moyen par TIM (indice entre 0 pour utilisation de TIM pertinente à 1 TC concurrence TIM)
+	- comment ponderer avec la population
+* trouver de la doc sur les secteurs d'accessibilité
+* calculer encore les derniers pixeles
+
+
 
 ### EN COURS
 
-
-* dans raster : choix tim tp
-
+* surligner le pix sélectionné
+* légende "emplois"
 
 ### A CORRIGER
 
-* les iso reapparaissent après le zoom
 * les iso dans le snap
-* les tooltip pas parfait (disparition après reload)
-  - dépend de quand  on lance les pixels (normalement après le premier chargement donc ok)
 * mapbox ajout de labels à petite échelle
 
 ### FAIT!
 
+* les iso reapparaissent après le zoom > OK
+* les tooltip pas parfait (disparition après reload)
+  - dépend de quand  on lance les pixels (normalement après le premier chargement donc ok)
+  - mieux
+* dans raster : choix tim tp
+* implémenter la BD avec
+  * lier avec pop/emp > tooltip
+* Postgis distance du pixel ?
 * corriger la supperposition des pixels (hide au lieu de remove!)
 * hide/show deco iso
 * change color avec ANIMATION
