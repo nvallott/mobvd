@@ -4,31 +4,31 @@
 ### A FAIRE
 
 
-* créer un graph avec le bon TLM > otp WGS.tif sur le serveur
-	- tester les temps de parcours à vélo
-				* supprimer les temps de parcours à vélo (résultats mauvais/pas assez de résultats/trop longues distances)
-	- remplacer par une carte avec la différence temps TC/TIM
+* opacity en fonction de la population ?
+* remplacer vélo par une carte avec la différence temps TC/TIM
 		- récréer une nouvelle table ou charger les deux lors de l'affichage ?
-
+		- plus simple de recréer une table
 * carte accessibilité globale > temps moyen en TC/temps moyen par TIM (indice entre 0 pour utilisation de TIM pertinente à 1 TC concurrence TIM)
-	- comment ponderer avec la population
+	- comment ponderer avec la population ?
 * trouver de la doc sur les secteurs d'accessibilité
-* calculer encore les derniers pixeles
-
 
 
 ### EN COURS
 
-* surligner le pix sélectionné
-* légende "emplois"
+* calculer encore les derniers pixels
 
 ### A CORRIGER
 
+* créer un graph avec le bon TLM > otp WGS.tif sur le serveur
+	- tester les temps de parcours à vélo > toujours pas
+				* supprimer les temps de parcours à vélo (résultats mauvais/pas assez de résultats/trop longues distances)
 * les iso dans le snap
 * mapbox ajout de labels à petite échelle
 
 ### FAIT!
 
+surligner le pix sélectionné
+* légende "emplois"
 * les iso reapparaissent après le zoom > OK
 * les tooltip pas parfait (disparition après reload)
   - dépend de quand  on lance les pixels (normalement après le premier chargement donc ok)

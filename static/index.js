@@ -116,6 +116,7 @@ APP.initMap = function(){
       if(check == true){
         // isochrones
         let coord = e.latlng;
+        console.log(coord);
         lat = coord.lat;
         lng = coord.lng;
         urlOtp = baseUrl + lat + "," + lng + "&date=2017/12/20&time=" + time + "&mode=" + mode + cf1;
