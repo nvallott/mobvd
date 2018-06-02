@@ -8,7 +8,7 @@
 * remplacer vélo par une carte avec la différence temps TC/TIM
 		- récréer une nouvelle table ou charger les deux lors de l'affichage ?
 		- plus simple de recréer une table
-* carte accessibilité globale > temps moyen en TC/temps moyen par TIM (indice entre 0 pour utilisation de TIM pertinente à 1 TC concurrence TIM)
+* carte accessibilité globale > temps moyen en TIM/TC (indice entre 0 pour utilisation de TIM pertinente à 1 TC concurrence TIM)
 	- comment ponderer avec la population ?
 * trouver de la doc sur les secteurs d'accessibilité
 
