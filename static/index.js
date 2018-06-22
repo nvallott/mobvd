@@ -98,11 +98,15 @@ APP.initMap = function(){
     // Add the mapbox as baselayer
     let mapbox = L.tileLayer('https://api.mapbox.com/styles/v1/nvallott/cjcw1ex6i0zs92smn584yavkn/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1IjoibnZhbGxvdHQiLCJhIjoiY2pjdzFkM2diMWFrMzJxcW80eTdnNDhnNCJ9.O853joFyvgOZv7y9IJAnlA');
     let toner = L.tileLayer('http://{s}.tile.stamen.com/toner/{z}/{x}/{y}.png', {attribution: 'Add some attributes here!'});
+    let transport = L.tileLayer('https://tile.thunderforest.com/transport/{z}/{x}/{y}.png');
+    let transport2 = L.tileLayer('http://www.openptmap.org/tiles/${z}/${x}/${y}.png');
     // change the baseLayer
     let baseLayers = {
       "CartoDB": cartodb,
       "MapBox": mapbox,
-      "Stamen Toner": toner
+      "Stamen Toner": toner,
+      "Transport Map": transport,
+      "Transport2 Map": transport2
       // here to add more layers
     };
 
